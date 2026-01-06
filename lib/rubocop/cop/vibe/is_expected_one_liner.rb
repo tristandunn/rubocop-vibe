@@ -63,19 +63,9 @@ module RuboCop
         # @return [nil] When no example block is found.
         def find_example_block(node)
           node.each_ancestor(:block).find do |ancestor|
-            example_block?(ancestor)
+            send_node = ancestor.send_node
+            send_node.method?(:it) || send_node.method?(:specify)
           end
-        end
-
-        # Check if a block is an example block (it or specify).
-        #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Boolean]
-        def example_block?(node)
-          return false unless node.block_type?
-
-          send_node = node.send_node
-          send_node.method?(:it) || send_node.method?(:specify)
         end
 
         # Autocorrect the offense by converting to one-liner syntax.
@@ -84,8 +74,6 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The block node.
         # @return [void]
         def autocorrect(corrector, node)
-          return unless node.body
-
           expectation_source = node.body.source
 
           # Skip autocorrect for multi-line expectations

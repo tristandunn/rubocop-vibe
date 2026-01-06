@@ -124,6 +124,14 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
+
+        expect_correction(<<~RUBY)
+          class User < ApplicationRecord
+            scope :active, -> { where(active: true) }
+
+            scope :inactive, -> { where(active: false) }
+          end
+        RUBY
       end
     end
 
@@ -519,6 +527,184 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
       it "does not register an offense" do
         expect_no_offenses(<<~RUBY)
           class User < ApplicationRecord; end
+        RUBY
+      end
+    end
+
+    context "when parent class is a method call" do
+      it "treats as regular class since parent_class has no const_name" do
+        expect_offense(<<~RUBY)
+          class User < base_class
+            def admin?
+              true
+            end
+
+            def initialize
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              @value = 1
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when class body contains non-categorizable nodes" do
+      it "ignores block nodes" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            has_many :posts
+
+            around_action do
+              yield
+            end
+
+            validates :name, presence: true
+          end
+        RUBY
+      end
+    end
+
+    context "when scope has no symbol argument" do
+      it "assigns empty sort key" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope -> { where(active: true) }
+          end
+        RUBY
+      end
+
+      it "does not register scope with string argument" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope "active", -> { where(active: true) }
+            scope "admin", -> { where(role: "admin") }
+          end
+        RUBY
+      end
+    end
+
+    context "when elements are already in correct order with no corrections needed" do
+      it "does not make unnecessary corrections" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            has_many :posts
+
+            validates :name, presence: true
+          end
+        RUBY
+      end
+    end
+
+    context "when inheriting from namespaced ApplicationRecord" do
+      it "treats as a model" do
+        expect_offense(<<~RUBY)
+          class User < MyEngine::ApplicationRecord
+            def admin?
+              true
+            end
+
+            has_many :posts
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+          end
+        RUBY
+      end
+    end
+
+    context "when inheriting from ActiveRecord::Base" do
+      it "treats as a model" do
+        expect_offense(<<~RUBY)
+          class User < ActiveRecord::Base
+            def admin?
+              true
+            end
+
+            has_many :posts
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+          end
+        RUBY
+      end
+    end
+
+    context "when private visibility comes before protected visibility" do
+      it "registers offense for private before protected" do
+        expect_offense(<<~RUBY)
+          class Service
+            private
+
+            def zzz_method
+              "zzz"
+            end
+
+            protected
+
+            def aaa_method
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              "aaa"
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when scopes need reordering with non-symbol arguments" do
+      it "autocorrects scopes with empty sort keys" do
+        expect_offense(<<~RUBY)
+          class User < ApplicationRecord
+            scope -> { where(active: true) }
+
+            has_many :posts
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class User < ApplicationRecord
+            has_many :posts
+
+            scope -> { where(active: true) }
+          end
+        RUBY
+      end
+
+      it "does not register multiple scopes with empty sort keys" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope -> { where(active: true) }
+            scope -> { where(admin: true) }
+          end
+        RUBY
+      end
+
+      it "does not register scopes with string names" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope "active", -> { where(active: true) }
+            scope "admin", -> { where(admin: true) }
+          end
+        RUBY
+      end
+
+      it "does not register scopes with block syntax" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope do
+              where(active: true)
+            end
+
+            scope do
+              where(admin: true)
+            end
+          end
+        RUBY
+      end
+
+      it "does not register scope with no arguments" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            scope
+
+            scope
+          end
         RUBY
       end
     end

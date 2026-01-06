@@ -499,5 +499,14 @@ RSpec.describe RuboCop::Cop::Vibe::ConsecutiveAssignmentAlignment, :config do
         RUBY
       end
     end
+
+    context "when method has no body" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY)
+          def empty_method
+          end
+        RUBY
+      end
+    end
   end
 end

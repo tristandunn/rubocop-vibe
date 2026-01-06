@@ -112,4 +112,22 @@ RSpec.describe RuboCop::Cop::Vibe::IsExpectedOneLiner, :config do
       RUBY
     end
   end
+
+  context "when is_expected is used in a let block" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+        RSpec.describe User do
+          let(:result) { is_expected.to be_valid }
+        end
+      RUBY
+    end
+  end
+
+  context "when is_expected is used outside any block" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+        is_expected.to be_valid
+      RUBY
+    end
+  end
 end

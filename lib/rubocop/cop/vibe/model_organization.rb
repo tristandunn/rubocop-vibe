@@ -223,7 +223,7 @@ module RuboCop
           node_column = node.source_range.column
 
           node.source.lines.map.with_index do |line, idx|
-            col = idx.zero? ? node_column : (line[/\A\s*/]&.length || 0)
+            col = idx.zero? ? node_column : line[/\A\s*/].length
             { text: line.chomp, column: col }
           end
         end
@@ -282,9 +282,8 @@ module RuboCop
         def categorize_node(node, visibility, is_model)
           return method_category(node, visibility) if node.any_def_type?
           return send_category(node, is_model) if node.send_type?
-          return :constants if node.casgn_type?
 
-          nil
+          :constants
         end
 
         # Categorize method nodes.
@@ -292,17 +291,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The node to categorize.
         # @param [Symbol] visibility The current visibility.
         # @return [Symbol]
-        # @return [nil]
         def method_category(node, visibility)
           return :class_methods if node.defs_type?
+          return :initialize if node.method?(:initialize) && visibility == :public
 
-          if node.def_type?
-            return :initialize if node.method?(:initialize) && visibility == :public
-
-            return visibility_method_category(visibility)
-          end
-
-          nil
+          visibility_method_category(visibility)
         end
 
         # Get category for visibility-based instance methods.
@@ -372,7 +365,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The scope node.
         # @return [String]
         def scope_sort_key(node)
-          node.first_argument&.sym_type? ? node.first_argument.value.to_s : ""
+          first_arg = node.first_argument
+          return "" if first_arg.nil?
+          return "" unless first_arg.sym_type?
+
+          first_arg.value.to_s
         end
 
         # Find elements that violate ordering.
@@ -426,9 +423,7 @@ module RuboCop
         # @param [Array<Hash>] elements The list of elements.
         # @return [void]
         def autocorrect(corrector, _class_node, elements)
-          sorted = sort_elements(elements)
-          return if sorted == elements
-
+          sorted      = sort_elements(elements)
           base_column = calculate_base_indent(elements)
           replacement = build_replacement(sorted, base_column)
           range       = replacement_range(elements)
@@ -499,8 +494,6 @@ module RuboCop
         # @param [Integer] base_column The target indentation column.
         # @return [String] The rendered source.
         def render_source(source_lines, base_column)
-          return "" if source_lines.empty?
-
           min_column = source_lines.map { |l| l[:column] }.min
           indent     = " " * base_column
 

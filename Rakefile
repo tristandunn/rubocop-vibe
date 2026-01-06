@@ -6,10 +6,15 @@ require "rubocop/rake_task"
 
 Bundler::GemHelper.install_tasks
 
-RSpec::Core::RakeTask.new do |t|
-  t.pattern = "spec/**/*_spec.rb"
+RSpec::Core::RakeTask.new
+
+Rake::Task[:spec].enhance([:coverage])
+
+desc "Enable test coverage"
+task :coverage do
+  ENV["COVERAGE"] = "1"
 end
 
 RuboCop::RakeTask.new
 
-task default: %i(spec rubocop)
+task default: %i(rubocop:autocorrect spec)

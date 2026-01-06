@@ -244,5 +244,40 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
         expect_no_corrections
       end
     end
+
+    context "when it block has no body" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "is pending" do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when body is not a send type" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "returns a value" do
+              42
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when body is a method call without expect" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "calls a method" do
+              some_method.call
+            end
+          end
+        RUBY
+      end
+    end
   end
 end

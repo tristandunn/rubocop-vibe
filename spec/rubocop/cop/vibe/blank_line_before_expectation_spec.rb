@@ -242,5 +242,45 @@ RSpec.describe RuboCop::Cop::Vibe::BlankLineBeforeExpectation, :config do
         RUBY
       end
     end
+
+    context "when previous statement is not a send node" do
+      it "registers an offense for assignment before expect" do
+        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "creates a record" do
+              result = do_something
+              expect(result).to be_valid
+              ^^^^^^ Add a blank line before expectation when there is setup code above.
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when statement is a literal value" do
+      it "does not check non-send statements for expect" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "returns something" do
+              42
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when expect is used without matcher chain" do
+      it "registers an offense for bare expect call after setup" do
+        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "gets expectation target" do
+              record.process
+              expect(record)
+              ^^^^^^ Add a blank line before expectation when there is setup code above.
+            end
+          end
+        RUBY
+      end
+    end
   end
 end

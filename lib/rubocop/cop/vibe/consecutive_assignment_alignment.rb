@@ -62,11 +62,7 @@ module RuboCop
           return if statements.size < 2
 
           groups = group_consecutive_assignments(statements)
-          groups.each do |group|
-            next if group.size < 2
-
-            check_group_alignment(group)
-          end
+          groups.each { |group| check_group_alignment(group) }
         end
 
         # Extract statements from a body node.

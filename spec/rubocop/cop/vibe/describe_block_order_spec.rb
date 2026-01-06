@@ -389,5 +389,56 @@ RSpec.describe RuboCop::Cop::Vibe::DescribeBlockOrder, :config do
         expect_correction(constants_correction)
       end
     end
+
+    context "when describe block has no body" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+          end
+        RUBY
+      end
+    end
+
+    context "when describe uses a constant instead of string" do
+      it "assigns default priority to constant descriptions" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            describe SomeConstant do
+            end
+
+            describe AnotherConstant do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when describe has non-method descriptions" do
+      it "assigns non-special priority" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            describe "scopes" do
+            end
+
+            describe "callbacks" do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when describe block has no argument" do
+      it "assigns default priority" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            describe do
+            end
+
+            describe do
+            end
+          end
+        RUBY
+      end
+    end
   end
 end
