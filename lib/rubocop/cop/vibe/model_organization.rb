@@ -222,6 +222,13 @@ module RuboCop
           end
         end
 
+        # Get comments indexed by line number for fast lookup.
+        #
+        # @return [Hash<Integer, Parser::Source::Comment>] Comments keyed by line.
+        def comments_by_line
+          @comments_by_line ||= processed_source.comments.to_h { |c| [c.location.line, c] }
+        end
+
         # Get comments immediately before a node.
         #
         # Loops backwards from the node until finding a non-comment line.
@@ -230,14 +237,10 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The node.
         # @return [Array<Parser::Source::Comment>] Consecutive comments before node.
         def comments_before(node)
-          all_comments = processed_source.comments.select { |c| c.location.line < node.first_line }
-
           consecutive   = []
           expected_line = node.first_line - 1
 
-          all_comments.reverse_each do |comment|
-            break unless comment.location.line == expected_line
-
+          while (comment = comments_by_line[expected_line])
             consecutive.unshift(comment)
             expected_line -= 1
           end
