@@ -53,6 +53,7 @@ module RuboCop
 
           expectation = extract_expectation(node.body)
           return unless simple_expectation?(expectation)
+          return if complex_expectation?(node)
 
           add_offense(node.send_node) do |corrector|
             autocorrect(corrector, node)
@@ -62,6 +63,30 @@ module RuboCop
 
         private
 
+        # Check if the expectation is too complex for one-liner conversion.
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Boolean]
+        def complex_expectation?(node)
+          expectation_source = node.body.source
+
+          # Multi-line expectations are complex
+          return true if expectation_source.include?("\n")
+
+          # Expectations with compound matchers (.and, .or) are complex
+          compound_matcher?(node.body)
+        end
+
+        # Check if the expectation uses compound matchers.
+        #
+        # @param [RuboCop::AST::Node] node The expectation node.
+        # @return [Boolean]
+        def compound_matcher?(node)
+          node.each_descendant(:send).any? do |send_node|
+            send_node.method?(:and) || send_node.method?(:or)
+          end
+        end
+
         # Autocorrect the offense by converting to one-liner syntax.
         #
         # @param [RuboCop::Cop::Corrector] corrector The corrector.
@@ -69,11 +94,6 @@ module RuboCop
         # @return [void]
         def autocorrect(corrector, node)
           expectation_source = node.body.source
-
-          # Skip autocorrect for multi-line expectations to avoid broken one-liners
-          return if expectation_source.include?("\n")
-
-          # Replace the entire block with one-liner syntax
           corrector.replace(node, "it { #{expectation_source} }")
         end
 

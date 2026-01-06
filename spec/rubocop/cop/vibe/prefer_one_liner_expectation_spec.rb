@@ -165,23 +165,14 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
       end
     end
 
-    context "when expectation has multiple chained matchers" do
-      it "registers an offense" do
-        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+    context "when expectation has compound matchers on single line" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
           RSpec.describe User do
             describe "#name" do
               it "has the correct name" do
-              ^^^^^^^^^^^^^^^^^^^^^^^^^ Use one-liner `it { is_expected.to }` syntax for simple expectations.
                 expect(subject.name).to eq("John").and be_a(String)
               end
-            end
-          end
-        RUBY
-
-        expect_correction(<<~RUBY)
-          RSpec.describe User do
-            describe "#name" do
-              it { expect(subject.name).to eq("John").and be_a(String) }
             end
           end
         RUBY
@@ -228,11 +219,10 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
     end
 
     context "when expectation spans multiple lines" do
-      it "registers offense but does not autocorrect" do
-        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
           RSpec.describe User do
             it "has valid attributes" do
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ Use one-liner `it { is_expected.to }` syntax for simple expectations.
               expect(subject).to have_attributes(
                 name: "Test",
                 email: "test@example.com"
@@ -240,8 +230,6 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
             end
           end
         RUBY
-
-        expect_no_corrections
       end
     end
 
@@ -274,6 +262,36 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
           RSpec.describe User do
             it "calls a method" do
               some_method.call
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when expectation has multi-line hash arguments" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/controllers/tracking_controller_spec.rb")
+          RSpec.describe TrackingController do
+            it "sets access, cache, and content headers" do
+              expect(response.headers).to include(
+                "access-control-allow-origin" => "*",
+                "cache-control"               => "max-age=86400, public",
+                "content-type"                => "application/javascript"
+              )
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when expectation has compound matcher with multi-line arguments" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/controllers/tracking_controller_spec.rb")
+          RSpec.describe TrackingController do
+            it "returns the script content" do
+              expect(response.body).to eq(
+                Rails.application.assets.load_path.find("script.js").content
+              ).and(include("fetch("))
             end
           end
         RUBY
