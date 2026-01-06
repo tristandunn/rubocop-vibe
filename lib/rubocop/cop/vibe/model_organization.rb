@@ -37,7 +37,13 @@ module RuboCop
                     "class methods → instance methods → protected → private."
 
         ASSOCIATIONS = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
-        VALIDATIONS = %i(validates validate validates_each validates_with).freeze
+        VALIDATIONS = %i(
+          validates validate validates_each validates_with
+          validates_absence_of validates_acceptance_of validates_confirmation_of
+          validates_exclusion_of validates_format_of validates_inclusion_of
+          validates_length_of validates_numericality_of validates_presence_of
+          validates_size_of validates_uniqueness_of validates_associated
+        ).freeze
         CALLBACKS = %i(
           before_validation after_validation
           before_save after_save around_save
