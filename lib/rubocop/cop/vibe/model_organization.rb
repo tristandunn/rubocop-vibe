@@ -74,6 +74,12 @@ module RuboCop
           public:    :instance_methods
         }.freeze
 
+        # @!method visibility_modifier?(node)
+        #   Check if node is a visibility modifier (public, protected, private).
+        def_node_matcher :visibility_modifier?, <<~PATTERN
+          (send nil? {:public :protected :private})
+        PATTERN
+
         # Check and register violations.
         #
         # @param [RuboCop::AST::Node] node The class node.
@@ -136,7 +142,7 @@ module RuboCop
           index      = 0
 
           process_body_nodes(node.body).each do |child|
-            visibility = child.method_name if visibility_change?(child)
+            visibility = child.method_name if visibility_modifier?(child)
 
             element = build_element(child, visibility, index, is_model)
             elements << element and index += 1 if element
@@ -247,15 +253,6 @@ module RuboCop
           return [body] unless body.begin_type?
 
           body.children
-        end
-
-        # Check if node changes visibility.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def visibility_change?(node)
-          node.send_type? && %i(public protected
-                                private).include?(node.method_name) && node.arguments.empty?
         end
 
         # Check if node should be categorized.

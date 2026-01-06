@@ -68,6 +68,12 @@ module RuboCop
           "validations"  => 20
         }.freeze
 
+        # @!method describe_block?(node)
+        #   Check if node is a describe block (matches both `describe` and `RSpec.describe`).
+        def_node_matcher :describe_block?, <<~PATTERN
+          (block (send _ :describe ...) ...)
+        PATTERN
+
         # Check block nodes for describe calls.
         #
         # @param [RuboCop::AST::Node] node The block node.
@@ -95,8 +101,8 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The block node.
         # @return [Boolean]
         def top_level_describe?(node)
-          node.method?(:describe) &&
-            node.each_ancestor(:block).none? { |ancestor| ancestor.method?(:describe) }
+          describe_block?(node) &&
+            node.each_ancestor(:block).none? { |ancestor| describe_block?(ancestor) }
         end
 
         # Extract second-level describe blocks.

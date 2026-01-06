@@ -45,13 +45,25 @@ module RuboCop
 
         SERVICE_FILE_PATTERN = %r{app/services/.*\.rb\z}
 
+        # @!method class_call_method?(node)
+        #   Check if node is a self.call class method definition.
+        def_node_search :class_call_method?, <<~PATTERN
+          (defs _ :call ...)
+        PATTERN
+
+        # @!method instance_call_method?(node)
+        #   Check if node is a call instance method definition.
+        def_node_search :instance_call_method?, <<~PATTERN
+          (def :call ...)
+        PATTERN
+
         # Check class definitions for missing call methods.
         #
         # @param [RuboCop::AST::Node] node The class node.
         # @return [void]
         def on_class(node)
           return unless service_file?
-          return if class_call?(node) && instance_call?(node)
+          return if class_call_method?(node) && instance_call_method?(node)
 
           add_offense(node.loc.name)
         end
@@ -63,41 +75,6 @@ module RuboCop
         # @return [Boolean]
         def service_file?
           processed_source.file_path.match?(SERVICE_FILE_PATTERN)
-        end
-
-        # Check if class has a self.call method.
-        #
-        # @param [RuboCop::AST::Node] node The class node.
-        # @return [Boolean]
-        def class_call?(node)
-          return false unless node.body
-
-          find_method(node, :defs, :call)
-        end
-
-        # Check if class has an instance call method.
-        #
-        # @param [RuboCop::AST::Node] node The class node.
-        # @return [Boolean]
-        def instance_call?(node)
-          return false unless node.body
-
-          find_method(node, :def, :call)
-        end
-
-        # Find a method definition in the class body.
-        #
-        # @param [RuboCop::AST::Node] node The class node.
-        # @param [Symbol] type The method type (:def or :defs).
-        # @param [Symbol] name The method name.
-        # @return [Boolean]
-        def find_method(node, type, name)
-          body     = node.body
-          children = body.begin_type? ? body.children : [body]
-
-          children.any? do |child|
-            child.type == type && child.method?(name)
-          end
         end
       end
     end
