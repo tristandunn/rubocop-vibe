@@ -1,0 +1,33 @@
+name: CI
+
+on: # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby:
+          - "4.0"
+
+    name: Ruby ${{ matrix.ruby }}
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Run the tests
+        run: bundle exec rake spec
+
+      - name: Lint the code
+        run: bundle exec rubocop
