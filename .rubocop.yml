@@ -1,0 +1,17 @@
+inherit_from: config/default.yml
+
+require:
+  - ./lib/rubocop-vibe
+
+plugins:
+  - rubocop-internal_affairs
+
+Naming/FileName:
+  Exclude:
+    - lib/rubocop-vibe.rb
+
+Metrics/ClassLength:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false

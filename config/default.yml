@@ -1,0 +1,63 @@
+plugins:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  Exclude:
+    - "tmp/**/*"
+    - "vendor/**/*"
+  NewCops: enable
+  TargetRubyVersion: 4.0
+
+Layout/HashAlignment:
+  EnforcedColonStyle: table
+  EnforcedHashRocketStyle: table
+
+Naming/RescuedExceptionsVariableName:
+  Enabled: true
+  PreferredName: error
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+
+Style/ArgumentsForwarding:
+  UseAnonymousForwarding: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/DocumentationMethod:
+  Enabled: true
+  Exclude:
+    - "db/**/*"
+    - "spec/**/*"
+  RequireForNonPublicMethods: true
+
+Style/ExpandPathArguments:
+  Enabled: true
+  Exclude:
+    - bin/*
+
+Style/GuardClause:
+  Enabled: false
+
+Style/HashSyntax:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    "%i": "()"
+    "%w": "()"
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
