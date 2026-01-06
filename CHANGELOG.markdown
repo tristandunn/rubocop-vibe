@@ -7,3 +7,4 @@
 - Add Vibe/DescribeBlockOrder cop.
 - Add Vibe/ModelOrganization cop.
 - Add Vibe/PreferOneLinerExpectation cop.
+- Add Vibe/ServiceCallMethod cop.

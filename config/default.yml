@@ -86,3 +86,8 @@ Vibe/PreferOneLinerExpectation:
   Description: "Enforces one-liner syntax for simple RSpec expectations."
   Enabled: true
   VersionAdded: "0.1.0"
+
+Vibe/ServiceCallMethod:
+  Description: "Service objects should define `self.call` and `call` methods."
+  Enabled: true
+  VersionAdded: "0.1.0"
