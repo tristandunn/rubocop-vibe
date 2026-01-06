@@ -92,6 +92,12 @@ Vibe/ModelOrganization:
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
+Vibe/NoAssignsAttributeTesting:
+  Description: "Enforces that controller specs only test assignment identity, not attributes or associations."
+  Enabled: true
+  SafeAutoCorrect: false
+  VersionAdded: "0.1.0"
+
 Vibe/NoRubocopDisable:
   Description: "Enforces that rubocop:disable comments are not used inline."
   Enabled: true
