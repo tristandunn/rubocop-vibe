@@ -445,5 +445,36 @@ RSpec.describe RuboCop::Cop::Vibe::ConsecutiveAssignmentAlignment, :config do
         RUBY
       end
     end
+
+    context "when autocorrecting ensures at least one space" do
+      let(:offense_code) do
+        <<~RUBY
+          def setup
+            very_long_variable_name = 1
+            x = 2
+            ^ Align consecutive assignments at the = operator.
+          end
+        RUBY
+      end
+
+      let(:corrected_code) do
+        <<~RUBY
+          def setup
+            very_long_variable_name = 1
+            x                       = 2
+          end
+        RUBY
+      end
+
+      it "registers an offense" do
+        expect_offense(offense_code)
+      end
+
+      it "autocorrects with proper spacing" do
+        expect_offense(offense_code)
+
+        expect_correction(corrected_code)
+      end
+    end
   end
 end

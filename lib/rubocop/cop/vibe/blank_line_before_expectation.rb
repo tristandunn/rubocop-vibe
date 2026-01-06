@@ -25,9 +25,9 @@ module RuboCop
       #   end
       class BlankLineBeforeExpectation < Base
         extend AutoCorrector
+        include SpecFileHelper
 
         MSG = "Add a blank line before expectation when there is setup code above."
-        SPEC_FILE_PATTERN = %r{spec/.*_spec\.rb}
 
         # Check block nodes for expect calls in example blocks.
         #
@@ -93,13 +93,6 @@ module RuboCop
           add_offense(expect_node.loc.selector) do |corrector|
             corrector.insert_after(previous_statement, "\n")
           end
-        end
-
-        # Check if file is a spec file.
-        #
-        # @return [Boolean]
-        def spec_file?
-          processed_source.file_path.match?(SPEC_FILE_PATTERN)
         end
 
         # Check if block is an example block (it, specify, scenario).

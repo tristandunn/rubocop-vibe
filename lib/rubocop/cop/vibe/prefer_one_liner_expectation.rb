@@ -27,9 +27,9 @@ module RuboCop
       #   end
       class PreferOneLinerExpectation < Base
         extend AutoCorrector
+        include SpecFileHelper
 
         MSG = "Use one-liner `it { is_expected.to }` syntax for simple expectations."
-        SPEC_FILE_PATTERN = %r{spec/.*_spec\.rb}
 
         # Check block nodes for multi-line it blocks with simple expectations.
         #
@@ -58,6 +58,9 @@ module RuboCop
         def autocorrect(corrector, node)
           expectation_source = node.body.source
 
+          # Skip autocorrect for multi-line expectations to avoid broken one-liners
+          return if expectation_source.include?("\n")
+
           # Replace the entire block with one-liner syntax
           corrector.replace(node, "it { #{expectation_source} }")
         end
@@ -68,13 +71,6 @@ module RuboCop
         # @return [Boolean]
         def processable_block?(node)
           spec_file? && example_block_with_description?(node)
-        end
-
-        # Check if file is a spec file.
-        #
-        # @return [Boolean]
-        def spec_file?
-          processed_source.file_path.match?(SPEC_FILE_PATTERN)
         end
 
         # Check if block is an example block with a description.

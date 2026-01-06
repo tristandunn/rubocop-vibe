@@ -50,10 +50,10 @@ module RuboCop
       #   end
       class DescribeBlockOrder < Base
         extend AutoCorrector
+        include SpecFileHelper
 
         MSG = "Describe blocks should be ordered: class → constants → .class_method → #instance_method."
 
-        SPEC_FILE_PATTERN = %r{spec/.*_spec\.rb}
         # Priority for non-special, non-method descriptions (e.g., "callbacks", "scopes")
         NON_SPECIAL_DESCRIPTION_PRIORITY = 300
         # Default priority for descriptions that can't be categorized (e.g., constants, variables)
@@ -89,13 +89,6 @@ module RuboCop
         alias on_numblock on_block
 
         private
-
-        # Check if file is a spec file.
-        #
-        # @return [Boolean]
-        def spec_file?
-          processed_source.file_path.match?(SPEC_FILE_PATTERN)
-        end
 
         # Check if this is a top-level describe block.
         #

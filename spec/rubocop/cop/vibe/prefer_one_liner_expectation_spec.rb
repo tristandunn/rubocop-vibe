@@ -249,5 +249,23 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
         RUBY
       end
     end
+
+    context "when expectation spans multiple lines" do
+      it "registers offense but does not autocorrect" do
+        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "has valid attributes" do
+            ^^^^^^^^^^^^^^^^^^^^^^^^^ Use one-liner `it { is_expected.to }` syntax for simple expectations.
+              expect(subject).to have_attributes(
+                name: "Test",
+                email: "test@example.com"
+              )
+            end
+          end
+        RUBY
+
+        expect_no_corrections
+      end
+    end
   end
 end
