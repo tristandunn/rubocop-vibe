@@ -46,9 +46,9 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The block node.
         # @return [void]
         def on_block(node)
-          return unless processable_block?(node)
-
-          check_statements(extract_statements(node.body))
+          if processable_block?(node)
+            check_statements(extract_statements(node.body))
+          end
         end
         alias on_numblock on_block
 

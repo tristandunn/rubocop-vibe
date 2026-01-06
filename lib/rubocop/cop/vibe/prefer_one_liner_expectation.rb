@@ -115,9 +115,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] body The block body.
         # @return [Boolean]
         def single_statement?(body)
-          return false unless body
-
-          !body.begin_type?
+          if body
+            !body.begin_type?
+          else
+            false
+          end
         end
 
         # Extract the expectation node from the body.
@@ -126,10 +128,9 @@ module RuboCop
         # @return [RuboCop::AST::Node]
         # @return [nil] When no expectation is found.
         def extract_expectation(body)
-          return nil unless body.send_type?
-
-          # Check if the body contains is_expected or expect
-          find_expectation_in_chain(body)
+          if body.send_type?
+            find_expectation_in_chain(body)
+          end
         end
 
         # Find expectation node in method chain.

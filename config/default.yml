@@ -108,6 +108,12 @@ Vibe/NoSkippedTests:
   Enabled: true
   VersionAdded: "0.1.0"
 
+Vibe/NoUnlessGuardClause:
+  Description: "Enforces using positive if conditions instead of unless for guard clauses."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.1.0"
+
 Vibe/PreferOneLinerExpectation:
   Description: "Enforces one-liner syntax for simple RSpec expectations."
   Enabled: true

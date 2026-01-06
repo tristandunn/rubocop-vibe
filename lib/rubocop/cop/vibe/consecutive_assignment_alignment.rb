@@ -34,9 +34,9 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The block node.
         # @return [void]
         def on_block(node)
-          return unless node.body
-
-          check_assignments_in_body(node.body)
+          if node.body
+            check_assignments_in_body(node.body)
+          end
         end
         alias on_numblock on_block
 
@@ -45,9 +45,9 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The def node.
         # @return [void]
         def on_def(node)
-          return unless node.body
-
-          check_assignments_in_body(node.body)
+          if node.body
+            check_assignments_in_body(node.body)
+          end
         end
         alias on_defs on_def
 

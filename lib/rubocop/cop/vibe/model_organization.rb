@@ -141,13 +141,23 @@ module RuboCop
         # @param [Boolean] is_model Whether this is a Rails model.
         # @return [Array<Hash>] Array of element info.
         def extract_elements(node, is_model)
-          return [] unless node.body
+          if node.body
+            collect_elements(node.body, is_model)
+          else
+            []
+          end
+        end
 
+        # Collect elements from body nodes.
+        #
+        # @param [RuboCop::AST::Node] body The body node.
+        # @param [Boolean] is_model Whether this is a Rails model.
+        # @return [Array<Hash>] Array of element hashes.
+        def collect_elements(body, is_model)
           visibility = :public
           elements   = []
           index      = 0
-
-          process_body_nodes(node.body).each do |child|
+          process_body_nodes(body).each do |child|
             visibility = child.method_name if visibility_modifier?(child)
 
             element = build_element(child, visibility, index, is_model)
@@ -259,9 +269,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] body The body node.
         # @return [Array<RuboCop::AST::Node>]
         def process_body_nodes(body)
-          return [body] unless body.begin_type?
-
-          body.children
+          if body.begin_type?
+            body.children
+          else
+            [body]
+          end
         end
 
         # Check if node should be categorized.

@@ -110,9 +110,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] top_node The top-level describe block.
         # @return [Array<Hash>] Array of describe block info.
         def extract_describe_blocks(top_node)
-          return [] unless top_node.body
-
-          block_nodes(top_node).map.with_index { |node, index| build_block_info(node, index) }
+          if top_node.body
+            block_nodes(top_node).map.with_index { |node, index| build_block_info(node, index) }
+          else
+            []
+          end
         end
 
         # Get block nodes from the top-level describe.
@@ -173,12 +175,14 @@ module RuboCop
         # @param [String, nil] description The describe block description.
         # @return [Integer] Priority number (lower = earlier).
         def categorize_description(description)
-          return DEFAULT_PRIORITY unless description
-
-          special_section_priority(description) ||
-            controller_action_priority(description) ||
-            method_priority(description) ||
-            NON_SPECIAL_DESCRIPTION_PRIORITY
+          if description
+            special_section_priority(description) ||
+              controller_action_priority(description) ||
+              method_priority(description) ||
+              NON_SPECIAL_DESCRIPTION_PRIORITY
+          else
+            DEFAULT_PRIORITY
+          end
         end
 
         # Get priority for special sections.
@@ -198,9 +202,9 @@ module RuboCop
         def controller_action_priority(description)
           # Strip the # prefix for controller actions
           action_name = description.start_with?("#") ? description[1..] : description
-          return unless controller_action?(action_name)
-
-          30 + CONTROLLER_ACTIONS.index(action_name)
+          if controller_action?(action_name)
+            30 + CONTROLLER_ACTIONS.index(action_name)
+          end
         end
 
         # Get priority for method descriptions.

@@ -69,11 +69,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The send node.
         # @return [void]
         def on_send(node)
-          return unless spec_file?
-
-          check_skip(node)
-          check_pending(node)
-          check_x_method(node)
+          if spec_file?
+            check_skip(node)
+            check_pending(node)
+            check_x_method(node)
+          end
         end
         alias on_csend on_send
 
@@ -84,9 +84,9 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The send node.
         # @return [void]
         def check_skip(node)
-          return unless skip_call?(node)
-
-          add_offense(node, message: MSG_SKIP)
+          if skip_call?(node)
+            add_offense(node, message: MSG_SKIP)
+          end
         end
 
         # Check for pending method calls.
@@ -94,9 +94,9 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The send node.
         # @return [void]
         def check_pending(node)
-          return unless pending_call?(node)
-
-          add_offense(node, message: MSG_PENDING)
+          if pending_call?(node)
+            add_offense(node, message: MSG_PENDING)
+          end
         end
 
         # Check for x-prefixed test method calls.
@@ -105,9 +105,9 @@ module RuboCop
         # @return [void]
         def check_x_method(node)
           method_name = x_method_call?(node)
-          return unless method_name
-
-          add_offense(node, message: format(MSG_XMETHOD, method: method_name))
+          if method_name
+            add_offense(node, message: format(MSG_XMETHOD, method: method_name))
+          end
         end
       end
     end
