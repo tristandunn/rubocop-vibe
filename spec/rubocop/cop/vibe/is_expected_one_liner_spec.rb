@@ -50,18 +50,15 @@ RSpec.describe RuboCop::Cop::Vibe::IsExpectedOneLiner, :config do
   end
 
   context "when is_expected has a multi-line expectation" do
-    it "registers an offense but does not autocorrect" do
-      expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
         it "matches attributes" do
-        ^^^^^^^^^^^^^^^^^^^^^^^ Use one-liner `it { is_expected.to ... }` syntax when using `is_expected`.
           is_expected.to have_attributes(
             name: "Test",
             value: 42
           )
         end
       RUBY
-
-      expect_no_corrections
     end
   end
 
@@ -127,6 +124,42 @@ RSpec.describe RuboCop::Cop::Vibe::IsExpectedOneLiner, :config do
     it "does not register an offense" do
       expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
         is_expected.to be_valid
+      RUBY
+    end
+  end
+
+  context "when is_expected has multi-line matcher arguments" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+        it "sets access, cache, and content headers" do
+          is_expected.to include(
+            "access-control-allow-origin" => "*",
+            "cache-control"               => "max-age=86400, public",
+            "content-type"                => "application/javascript"
+          )
+        end
+      RUBY
+    end
+  end
+
+  context "when is_expected uses compound matchers" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+        it "returns the script content" do
+          is_expected.to eq(
+            Rails.application.assets.load_path.find("script.js").content
+          ).and(include("fetch("))
+        end
+      RUBY
+    end
+  end
+
+  context "when is_expected uses compound matcher on single line" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+        it "matches both conditions" do
+          is_expected.to be_valid.and be_persisted
+        end
       RUBY
     end
   end
