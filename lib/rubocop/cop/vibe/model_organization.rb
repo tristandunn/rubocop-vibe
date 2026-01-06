@@ -82,7 +82,7 @@ module RuboCop
         # @return [void]
         def check_violations(node, elements, is_model)
           violations = find_violations(elements)
-          message = is_model ? MODEL_MSG : CLASS_MSG
+          message    = is_model ? MODEL_MSG : CLASS_MSG
 
           violations.each do |element|
             add_offense(element[:node], message: message) do |corrector|
@@ -132,8 +132,8 @@ module RuboCop
           return [] unless node.body
 
           visibility = :public
-          elements = []
-          index = 0
+          elements   = []
+          index      = 0
 
           process_body_nodes(node.body).each do |child|
             visibility = child.method_name if visibility_change?(child)
@@ -188,7 +188,7 @@ module RuboCop
         # @return [String]
         def extract_source_with_comments(node)
           comments = comments_before(node)
-          parts = comments.map(&:text)
+          parts    = comments.map(&:text)
           parts << node.source
           parts.join("\n")
         end
@@ -203,7 +203,7 @@ module RuboCop
         def comments_before(node)
           all_comments = processed_source.comments.select { |c| c.location.line < node.first_line }
 
-          consecutive = []
+          consecutive   = []
           expected_line = node.first_line - 1
 
           all_comments.reverse_each do |comment|
@@ -401,7 +401,7 @@ module RuboCop
           return if sorted == elements
 
           replacement = build_replacement(sorted)
-          range = replacement_range(elements)
+          range       = replacement_range(elements)
           corrector.replace(range, replacement.chomp)
         end
 
@@ -411,10 +411,10 @@ module RuboCop
         # @return [Parser::Source::Range]
         def replacement_range(elements)
           first_elem = elements.min_by { |e| e[:node].source_range.begin_pos }
-          last_elem = elements.max_by { |e| e[:node].source_range.end_pos }
+          last_elem  = elements.max_by { |e| e[:node].source_range.end_pos }
 
           range_start = range_start_position(first_elem)
-          range_end = last_elem[:node].source_range.end_pos
+          range_end   = last_elem[:node].source_range.end_pos
 
           Parser::Source::Range.new(processed_source.buffer, range_start, range_end)
         end
