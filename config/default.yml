@@ -80,6 +80,12 @@ Vibe/DescribeBlockOrder:
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
+Vibe/IsExpectedOneLiner:
+  Description: "Enforces that is_expected is only used in one-liner it { } blocks."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.1.0"
+
 Vibe/ModelOrganization:
   Description: "Enforces consistent organization of Rails model definitions."
   Enabled: true

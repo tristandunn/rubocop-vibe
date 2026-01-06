@@ -126,18 +126,17 @@ module RuboCop
 
         # Check if the expectation is simple (not a block expectation).
         #
-        # Simple expectations use expect(value) or is_expected.
+        # Simple expectations use expect(value).
         # Block expectations use expect { ... } and are not simple.
+        # is_expected is handled by IsExpectedOneLiner cop.
         #
         # @param [RuboCop::AST::Node] node The expectation node.
         # @return [Boolean] True if simple expectation, false if block expectation.
         def simple_expectation?(node)
           return false unless node
 
-          # is_expected is always simple
-          return true if node.method?(:is_expected)
-
           # For expect, check if it has a block (expect { ... })
+          # is_expected is handled by IsExpectedOneLiner cop
           node.method?(:expect) && !node.block_node
         end
       end

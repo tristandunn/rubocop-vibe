@@ -25,29 +25,6 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
       end
     end
 
-    context "when using multi-line syntax with is_expected" do
-      it "registers an offense" do
-        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
-          RSpec.describe User do
-            describe "#valid?" do
-              it "is valid" do
-              ^^^^^^^^^^^^^ Use one-liner `it { is_expected.to }` syntax for simple expectations.
-                is_expected.to be_valid
-              end
-            end
-          end
-        RUBY
-
-        expect_correction(<<~RUBY)
-          RSpec.describe User do
-            describe "#valid?" do
-              it { is_expected.to be_valid }
-            end
-          end
-        RUBY
-      end
-    end
-
     context "when using specify with simple expectation" do
       it "registers an offense" do
         expect_offense(<<~RUBY, "spec/models/user_spec.rb")
