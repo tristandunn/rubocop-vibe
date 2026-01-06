@@ -476,5 +476,28 @@ RSpec.describe RuboCop::Cop::Vibe::ConsecutiveAssignmentAlignment, :config do
         expect_correction(corrected_code)
       end
     end
+
+    context "when assignments include heredocs" do
+      it "does not register an offense for heredoc assignments" do
+        expect_no_offenses(<<~RUBY)
+          def setup
+            sql = <<~SQL
+              SELECT * FROM users
+            SQL
+            query = "simple"
+          end
+        RUBY
+      end
+    end
+
+    context "when there is only one assignment" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            result = compute_value
+          end
+        RUBY
+      end
+    end
   end
 end

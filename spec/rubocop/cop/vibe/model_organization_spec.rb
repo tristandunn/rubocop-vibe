@@ -498,5 +498,29 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
         RUBY
       end
     end
+
+    context "when class is empty" do
+      it "does not register an offense for empty model" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+          end
+        RUBY
+      end
+
+      it "does not register an offense for empty class" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+          end
+        RUBY
+      end
+    end
+
+    context "when class has no body" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord; end
+        RUBY
+      end
+    end
   end
 end
