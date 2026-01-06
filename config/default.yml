@@ -61,3 +61,7 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Vibe/BlankLineBeforeExpectation:
+  Description: "Enforces a blank line before expectation calls when there is setup code above."
+  Enabled: true
