@@ -29,6 +29,18 @@ module RuboCop
 
         MSG = "Add a blank line before expectation when there is setup code above."
 
+        # @!method example_block?(node)
+        #   Check if block is an example block (it, specify, scenario).
+        def_node_matcher :example_block?, <<~PATTERN
+          (block (send nil? {:it :specify :scenario} ...) ...)
+        PATTERN
+
+        # @!method expect_call?(node)
+        #   Check if node is an expect call.
+        def_node_matcher :expect_call?, <<~PATTERN
+          (send nil? :expect ...)
+        PATTERN
+
         # Check block nodes for expect calls in example blocks.
         #
         # @param [RuboCop::AST::Node] node The block node.
@@ -95,14 +107,6 @@ module RuboCop
           end
         end
 
-        # Check if block is an example block (it, specify, scenario).
-        #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Boolean]
-        def example_block?(node)
-          node.block_type? && %i(it specify scenario).include?(node.method_name)
-        end
-
         # Find the expect node within a statement.
         #
         # Searches the node and its descendants for expect calls.
@@ -116,11 +120,11 @@ module RuboCop
           return unless node.send_type?
 
           # Check if this node itself is an expect call
-          return node if node.method?(:expect)
+          return node if expect_call?(node)
 
           # Search descendants for expect calls
           # This includes expect { ... } which has a block attached
-          node.each_descendant(:send).find { |send_node| send_node.method?(:expect) }
+          node.each_descendant(:send).find { |send_node| expect_call?(send_node) }
         end
 
         # Check if there's a blank line between two statements.

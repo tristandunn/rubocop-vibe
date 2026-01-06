@@ -31,6 +31,18 @@ module RuboCop
 
         MSG = "Use one-liner `it { is_expected.to }` syntax for simple expectations."
 
+        # @!method example_block_with_description?(node)
+        #   Check if block is an example block (it, specify) with a description.
+        def_node_matcher :example_block_with_description?, <<~PATTERN
+          (block (send nil? {:it :specify} _ ...) ...)
+        PATTERN
+
+        # @!method expectation_method?(node)
+        #   Check if node is an expect or is_expected call.
+        def_node_matcher :expectation_method?, <<~PATTERN
+          (send nil? {:expect :is_expected} ...)
+        PATTERN
+
         # Check block nodes for multi-line it blocks with simple expectations.
         #
         # @param [RuboCop::AST::Node] node The block node.
@@ -73,18 +85,6 @@ module RuboCop
           spec_file? && example_block_with_description?(node)
         end
 
-        # Check if block is an example block with a description.
-        #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Boolean]
-        def example_block_with_description?(node)
-          return false unless node.block_type?
-          return false unless %i(it specify).include?(node.method_name)
-
-          # Has a description argument (not one-liner syntax)
-          node.send_node.arguments?
-        end
-
         # Check if the body contains only a single statement.
         #
         # @param [RuboCop::AST::Node] body The block body.
@@ -122,16 +122,6 @@ module RuboCop
           end
 
           nil
-        end
-
-        # Check if node is an expectation method call.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def expectation_method?(node)
-          return false unless node.send_type?
-
-          node.method?(:expect) || node.method?(:is_expected)
         end
 
         # Check if the expectation is simple (not a block expectation).
