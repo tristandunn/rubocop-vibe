@@ -3,7 +3,7 @@
 module RuboCop
   module Cop
     module Vibe
-      # Enforces one-liner syntax for simple RSpec expectations.
+      # Enforces one-liner syntax for simple RSpec expectations with subject.
       #
       # @example
       #   # bad
@@ -13,6 +13,11 @@ module RuboCop
       #
       #   # good
       #   it { is_expected.to respond_with(:ok) }
+      #
+      #   # good - descriptions allowed for non-subject expectations
+      #   it "inherits from base class" do
+      #     expect(described_class.superclass).to eq(BaseClass)
+      #   end
       #
       #   # good - multi-line allowed for change expectations
       #   it "creates a record" do
@@ -146,18 +151,32 @@ module RuboCop
 
         # Check if the expectation is simple (not a block expectation).
         #
-        # Simple expectations use expect(value).
+        # Simple expectations use expect(subject).
         # Block expectations use expect { ... } and are not simple.
         # is_expected is handled by IsExpectedOneLiner cop.
+        # expect with non-subject receivers should keep descriptions.
         #
         # @param [RuboCop::AST::Node] node The expectation node.
-        # @return [Boolean] True if simple expectation, false if block expectation.
+        # @return [Boolean] True if simple expectation with subject, false otherwise.
         def simple_expectation?(node)
           return false unless node
+          return false unless node.method?(:expect) && !node.block_node
 
-          # For expect, check if it has a block (expect { ... })
-          # is_expected is handled by IsExpectedOneLiner cop
-          node.method?(:expect) && !node.block_node
+          # Only enforce one-liners for expect(subject)
+          # Other receivers (user.email, described_class, etc.) should keep descriptions
+          expect_subject?(node)
+        end
+
+        # Check if the expectation is using subject as the receiver.
+        #
+        # @param [RuboCop::AST::Node] node The expect node.
+        # @return [Boolean]
+        def expect_subject?(node)
+          argument = node.first_argument
+          return false unless argument
+          return false unless argument.send_type?
+
+          argument.method?(:subject)
         end
       end
     end

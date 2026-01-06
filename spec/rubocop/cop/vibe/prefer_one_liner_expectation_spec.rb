@@ -180,22 +180,25 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
     end
 
     context "when using expect with receiver other than subject" do
-      it "registers an offense" do
-        expect_offense(<<~RUBY, "spec/models/user_spec.rb")
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
           RSpec.describe User do
             describe "#email" do
               it "has an email" do
-              ^^^^^^^^^^^^^^^^^ Use one-liner `it { is_expected.to }` syntax for simple expectations.
                 expect(user.email).to be_present
               end
             end
           end
         RUBY
+      end
+    end
 
-        expect_correction(<<~RUBY)
+    context "when using expect with described_class" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
           RSpec.describe User do
-            describe "#email" do
-              it { expect(user.email).to be_present }
+            it "inherits from base class" do
+              expect(described_class.superclass).to eq(BaseClass)
             end
           end
         RUBY
@@ -292,6 +295,67 @@ RSpec.describe RuboCop::Cop::Vibe::PreferOneLinerExpectation, :config do
               expect(response.body).to eq(
                 Rails.application.assets.load_path.find("script.js").content
               ).and(include("fetch("))
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when using expect with a literal value" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "returns true" do
+              expect(true).to be(true)
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when using expect with a variable" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "is valid" do
+              expect(user).to be_valid
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when using is_expected in multi-line block" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "is valid" do
+              is_expected.to be_valid
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when body has no expectation arguments" do
+      it "does not register an offense" do
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "calls a method" do
+              do_something
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when using expect without arguments" do
+      it "does not register an offense" do
+        # This is invalid RSpec but we should handle it gracefully
+        expect_no_offenses(<<~RUBY, "spec/models/user_spec.rb")
+          RSpec.describe User do
+            it "does something" do
+              expect.to be_nil
             end
           end
         RUBY
