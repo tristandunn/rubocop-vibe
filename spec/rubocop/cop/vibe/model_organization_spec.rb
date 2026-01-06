@@ -244,7 +244,7 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
     end
 
     context "when private method comes before public method" do
-      it "registers an offense" do
+      it "registers an offense and corrects with proper visibility" do
         expect_offense(<<~RUBY)
           class User < ApplicationRecord
             private
@@ -258,6 +258,85 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             def admin?
             ^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               role == "admin"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class User < ApplicationRecord
+            def admin?
+              role == "admin"
+            end
+
+            private
+
+            def normalize_email
+              self.email = email.downcase
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when multiple methods need reordering across visibility levels" do
+      it "corrects all methods with proper visibility grouping" do
+        expect_offense(<<~RUBY)
+          class User < ApplicationRecord
+            private
+
+            def normalize_email
+              self.email = email.downcase
+            end
+
+            def send_notification
+              notify!
+            end
+
+            protected
+
+            def can_edit?
+            ^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+              true
+            end
+
+            public
+
+            def admin?
+            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+              role == "admin"
+            end
+
+            def active?
+            ^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+              status == "active"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class User < ApplicationRecord
+            def active?
+              status == "active"
+            end
+
+            def admin?
+              role == "admin"
+            end
+
+            protected
+
+            def can_edit?
+              true
+            end
+
+            private
+
+            def normalize_email
+              self.email = email.downcase
+            end
+
+            def send_notification
+              notify!
             end
           end
         RUBY

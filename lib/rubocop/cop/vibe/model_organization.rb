@@ -422,23 +422,24 @@ module RuboCop
         # @param [RuboCop::AST::Node] class_node The class node.
         # @param [Array<Hash>] elements The list of elements.
         # @return [void]
-        def autocorrect(corrector, _class_node, elements)
+        def autocorrect(corrector, class_node, elements)
           sorted      = sort_elements(elements)
           base_column = calculate_base_indent(elements)
           replacement = build_replacement(sorted, base_column)
-          range       = replacement_range(elements)
+          range       = replacement_range(class_node, elements)
           corrector.replace(range, replacement.chomp)
         end
 
         # Calculate the source range to replace when autocorrecting.
         #
+        # @param [RuboCop::AST::Node] class_node The class node.
         # @param [Array<Hash>] elements The list of elements.
         # @return [Parser::Source::Range]
-        def replacement_range(elements)
+        def replacement_range(class_node, elements)
           first_elem = elements.min_by { |e| e[:node].source_range.begin_pos }
           last_elem  = elements.max_by { |e| e[:node].source_range.end_pos }
 
-          range_start = range_start_position(first_elem)
+          range_start = range_start_position(class_node, first_elem)
           range_end   = last_elem[:node].source_range.end_pos
 
           Parser::Source::Range.new(processed_source.buffer, range_start, range_end)
@@ -446,16 +447,30 @@ module RuboCop
 
         # Get the start position for replacement range.
         #
-        # Starts from the beginning of the line to include leading whitespace.
+        # Includes any visibility modifiers that appear before the first element.
         #
+        # @param [RuboCop::AST::Node] class_node The class node.
         # @param [Hash] first_elem The first element.
         # @return [Integer]
-        def range_start_position(first_elem)
-          first_comments = comments_before(first_elem[:node])
-          first_range    = first_comments.any? ? first_comments.first.source_range : first_elem[:node].source_range
+        def range_start_position(class_node, first_elem)
+          first_node     = find_first_body_node(class_node, first_elem)
+          first_comments = comments_before(first_node)
+          first_range    = first_comments.any? ? first_comments.first.source_range : first_node.source_range
 
-          # Start from beginning of line to include indentation
           first_range.begin_pos - first_range.column
+        end
+
+        # Find the first node in the class body, including visibility modifiers.
+        #
+        # @param [RuboCop::AST::Node] class_node The class node.
+        # @param [Hash] first_elem The first categorizable element.
+        # @return [RuboCop::AST::Node]
+        def find_first_body_node(class_node, first_elem)
+          first_elem_pos = first_elem[:node].source_range.begin_pos
+
+          process_body_nodes(class_node.body).find do |child|
+            child.source_range.begin_pos >= first_elem_pos || visibility_modifier?(child)
+          end
         end
 
         # Sort elements by priority, sort key, and original index.
