@@ -87,6 +87,11 @@ Vibe/NoRubocopDisable:
   Enabled: true
   VersionAdded: "0.1.0"
 
+Vibe/NoSkippedTests:
+  Description: "Enforces that tests are not skipped or marked as pending."
+  Enabled: true
+  VersionAdded: "0.1.0"
+
 Vibe/PreferOneLinerExpectation:
   Description: "Enforces one-liner syntax for simple RSpec expectations."
   Enabled: true
