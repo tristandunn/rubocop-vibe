@@ -7,11 +7,10 @@
    ```
 3. Run the tests.
    ```
-   bundle exec rspec                         # All tests.
-   bundle exec rspec spec/rubocop/vibe_spec.rb # Single test.
+   bundle exec rspec
    ```
 
-## Requirements
+# Rules
 
 - Never disable a test.
 - Never disable a linting rule.
