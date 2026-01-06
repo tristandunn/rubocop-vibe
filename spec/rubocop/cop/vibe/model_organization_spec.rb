@@ -405,10 +405,10 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
         expect_correction(<<~RUBY)
           class User < ApplicationRecord
             # All the posts
-          has_many :posts
+            has_many :posts
 
-          # This is a public method
-          def admin?
+            # This is a public method
+            def admin?
               role == "admin"
             end
           end
@@ -463,9 +463,9 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             module Vibe
               class Plugin < LintRoller::Plugin
                 # Return information about the plug-in.
-          #
-          # @return [LintRoller::About] Information about the plug-in.
-          def about
+                #
+                # @return [LintRoller::About] Information about the plug-in.
+                def about
                   LintRoller::About.new(
                     name:        "rubocop-vibe",
                     version:     VERSION,
@@ -473,21 +473,23 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
                     description: "A set of custom cops to use on AI generated code."
                   )
                 end
-          # Return the rules for the plug-in.
-          #
-          # @return [LintRoller::Rules] The rules for this plug-in.
-          def rules(_context)
+
+                # Return the rules for the plug-in.
+                #
+                # @return [LintRoller::Rules] The rules for this plug-in.
+                def rules(_context)
                   LintRoller::Rules.new(
                     type:          :path,
                     config_format: :rubocop,
                     value:         Pathname.new(__dir__).join("../../../config/default.yml")
                   )
                 end
-          # Determine if the engine is supported.
-          #
-          # @param [LintRoller::Context] The runner context.
-          # @return [Boolean] If the engine is supported.
-          def supported?(context)
+
+                # Determine if the engine is supported.
+                #
+                # @param [LintRoller::Context] The runner context.
+                # @return [Boolean] If the engine is supported.
+                def supported?(context)
                   context.engine == :rubocop
                 end
               end

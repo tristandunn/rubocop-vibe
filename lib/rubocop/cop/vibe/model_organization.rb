@@ -184,13 +184,36 @@ module RuboCop
 
         # Extract source including preceding comments.
         #
+        # Stores each line's content with its original column offset for later normalization.
+        #
         # @param [RuboCop::AST::Node] node The node.
-        # @return [String]
+        # @return [Array<Hash>] Array of hashes with :text and :column.
         def extract_source_with_comments(node)
-          comments = comments_before(node)
-          parts    = comments.map(&:text)
-          parts << node.source
-          parts.join("\n")
+          lines = extract_comment_lines(node)
+          lines.concat(extract_node_lines(node))
+        end
+
+        # Extract comment lines before a node.
+        #
+        # @param [RuboCop::AST::Node] node The node.
+        # @return [Array<Hash>] Array of hashes with :text and :column.
+        def extract_comment_lines(node)
+          comments_before(node).map do |comment|
+            { text: comment.text, column: comment.source_range.column }
+          end
+        end
+
+        # Extract node source lines with column information.
+        #
+        # @param [RuboCop::AST::Node] node The node.
+        # @return [Array<Hash>] Array of hashes with :text and :column.
+        def extract_node_lines(node)
+          node_column = node.source_range.column
+
+          node.source.lines.map.with_index do |line, idx|
+            col = idx.zero? ? node_column : (line[/\A\s*/]&.length || 0)
+            { text: line.chomp, column: col }
+          end
         end
 
         # Get comments immediately before a node.
@@ -400,7 +423,8 @@ module RuboCop
           sorted = sort_elements(elements)
           return if sorted == elements
 
-          replacement = build_replacement(sorted)
+          base_column = calculate_base_indent(elements)
+          replacement = build_replacement(sorted, base_column)
           range       = replacement_range(elements)
           corrector.replace(range, replacement.chomp)
         end
@@ -421,15 +445,16 @@ module RuboCop
 
         # Get the start position for replacement range.
         #
+        # Starts from the beginning of the line to include leading whitespace.
+        #
         # @param [Hash] first_elem The first element.
         # @return [Integer]
         def range_start_position(first_elem)
           first_comments = comments_before(first_elem[:node])
-          if first_comments.any?
-            first_comments.first.source_range.begin_pos
-          else
-            first_elem[:node].source_range.begin_pos
-          end
+          first_range    = first_comments.any? ? first_comments.first.source_range : first_elem[:node].source_range
+
+          # Start from beginning of line to include indentation
+          first_range.begin_pos - first_range.column
         end
 
         # Sort elements by priority, sort key, and original index.
@@ -443,13 +468,40 @@ module RuboCop
         # Build replacement source for sorted elements.
         #
         # @param [Array<Hash>] sorted The sorted elements.
+        # @param [Integer] base_column The base indentation column.
         # @return [String]
-        def build_replacement(sorted)
-          state = { parts: [], visibility: :public, category: nil }
+        def build_replacement(sorted, base_column)
+          state = { parts: [], visibility: :public, category: nil, column: base_column }
 
           sorted.each { |element| process_element(element, state) }
 
           state[:parts].join.chomp
+        end
+
+        # Calculate base indentation column from the first element.
+        #
+        # @param [Array<Hash>] elements The list of elements.
+        # @return [Integer] The base indentation column.
+        def calculate_base_indent(elements)
+          first_elem = elements.min_by { |e| e[:node].source_range.begin_pos }
+          first_elem[:node].source_range.column
+        end
+
+        # Render source lines with normalized indentation.
+        #
+        # @param [Array<Hash>] source_lines Lines with :text and :column.
+        # @param [Integer] base_column The target indentation column.
+        # @return [String] The rendered source.
+        def render_source(source_lines, base_column)
+          return "" if source_lines.empty?
+
+          min_column = source_lines.map { |l| l[:column] }.min
+          indent     = " " * base_column
+
+          source_lines.map do |line|
+            relative_indent = " " * [0, line[:column] - min_column].max
+            "#{indent}#{relative_indent}#{line[:text].lstrip}"
+          end.join("\n")
         end
 
         # Process element for replacement.
@@ -458,36 +510,40 @@ module RuboCop
         # @param [Hash] state The state hash.
         # @return [void]
         def process_element(element, state)
-          add_visibility_modifier(state[:parts], element[:visibility], state[:visibility])
+          add_visibility_modifier(state, element[:visibility])
           state[:visibility] = element[:visibility]
 
           add_category_separator(state[:parts], element[:category], state[:category])
           state[:category] = element[:category]
 
-          state[:parts] << element[:source] << "\n"
+          rendered_source = render_source(element[:source], state[:column])
+          state[:parts] << rendered_source << "\n"
         end
 
         # Add visibility modifier if needed.
         #
-        # @param [Array<String>] parts The parts array.
+        # @param [Hash] state The state hash.
         # @param [Symbol] new_visibility The new visibility.
-        # @param [Symbol] current_visibility The current visibility.
         # @return [void]
-        def add_visibility_modifier(parts, new_visibility, current_visibility)
-          return if new_visibility == current_visibility
+        def add_visibility_modifier(state, new_visibility)
+          return if new_visibility == state[:visibility]
 
-          parts << "\n" if parts.any?
-          parts << "  #{new_visibility}\n"
+          indent = " " * state[:column]
+          state[:parts] << "\n" if state[:parts].any?
+          state[:parts] << "#{indent}#{new_visibility}\n"
         end
 
-        # Add blank line between categories.
+        # Add blank line between elements.
+        #
+        # Adds a blank line before elements (except the first one) to maintain
+        # readable spacing between class members.
         #
         # @param [Array<String>] parts The parts array.
-        # @param [Symbol] category The current category.
+        # @param [Symbol] _category The current category (unused but kept for API).
         # @param [Symbol] last_category The last category.
         # @return [void]
-        def add_category_separator(parts, category, last_category)
-          parts << "\n" if last_category && last_category != category
+        def add_category_separator(parts, _category, last_category)
+          parts << "\n" if last_category
         end
       end
     end
