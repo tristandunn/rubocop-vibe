@@ -65,3 +65,7 @@ Style/StringLiteralsInInterpolation:
 Vibe/BlankLineBeforeExpectation:
   Description: "Enforces a blank line before expectation calls when there is setup code above."
   Enabled: true
+
+Vibe/PreferOneLinerExpectation:
+  Description: "Enforces one-liner syntax for simple RSpec expectations."
+  Enabled: true
