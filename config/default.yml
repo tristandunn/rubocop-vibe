@@ -82,6 +82,11 @@ Vibe/ModelOrganization:
   Enabled: true
   VersionAdded: "0.1.0"
 
+Vibe/NoRubocopDisable:
+  Description: "Enforces that rubocop:disable comments are not used inline."
+  Enabled: true
+  VersionAdded: "0.1.0"
+
 Vibe/PreferOneLinerExpectation:
   Description: "Enforces one-liner syntax for simple RSpec expectations."
   Enabled: true
