@@ -65,21 +65,25 @@ Style/StringLiteralsInInterpolation:
 Vibe/BlankLineBeforeExpectation:
   Description: "Enforces a blank line before expectation calls when there is setup code above."
   Enabled: true
+  SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
 Vibe/ConsecutiveAssignmentAlignment:
   Description: "Enforces alignment of consecutive variable assignments at the = operator."
   Enabled: true
+  SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
 Vibe/DescribeBlockOrder:
   Description: "Enforces consistent ordering of describe blocks in RSpec files."
   Enabled: true
+  SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
 Vibe/ModelOrganization:
   Description: "Enforces consistent organization of Rails model definitions."
   Enabled: true
+  SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
 Vibe/NoRubocopDisable:
@@ -95,6 +99,7 @@ Vibe/NoSkippedTests:
 Vibe/PreferOneLinerExpectation:
   Description: "Enforces one-liner syntax for simple RSpec expectations."
   Enabled: true
+  SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
 Vibe/ServiceCallMethod:
