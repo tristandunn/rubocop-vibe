@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
     "rubygems_mfa_required"      => "true"
   }
 
-  s.files        = Dir["lib/**/*"].to_a
+  s.files        = Dir["config/**/*", "lib/**/*"].to_a
   s.require_path = "lib"
 
   s.required_ruby_version = ">= 4.0"
