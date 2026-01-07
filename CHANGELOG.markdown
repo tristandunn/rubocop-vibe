@@ -3,6 +3,7 @@
 ## 0.2.0 — Unreleased
 
 - Add Vibe/ConsecutiveConstantAlignment cop.
+- Add Vibe/ConsecutiveLetAlignment cop.
 
 ## 0.1.0 — January 6th, 2026
 
