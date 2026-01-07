@@ -49,7 +49,7 @@ In your `.rubocop.yml`, you may treat the cops just like any other cop. For
 example:
 
 ```yaml
-Vibe/ModelOrganization:
+Vibe/ClassOrganization:
   Exclude:
     - lib/example.rb
 ```

@@ -3,7 +3,13 @@
 module RuboCop
   module Cop
     module Vibe
-      # Enforces consistent organization of Rails model definitions.
+      # Enforces consistent organization of class definitions.
+      #
+      # For Rails models, enforces: concerns → constants → associations → validations →
+      # callbacks → scopes → class methods → instance methods → protected → private.
+      #
+      # For regular classes, enforces: includes → constants → initialize → class methods →
+      # instance methods → protected → private.
       #
       # @example
       #   # bad
@@ -27,7 +33,7 @@ module RuboCop
       #       role == "admin"
       #     end
       #   end
-      class ModelOrganization < Base
+      class ClassOrganization < Base
         extend AutoCorrector
 
         MODEL_MSG = "Model elements should be ordered: concerns → constants → associations → " \

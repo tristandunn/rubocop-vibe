@@ -86,8 +86,8 @@ Vibe/IsExpectedOneLiner:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
-Vibe/ModelOrganization:
-  Description: "Enforces consistent organization of Rails model definitions."
+Vibe/ClassOrganization:
+  Description: "Enforces consistent organization of class definitions."
   Enabled: true
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"

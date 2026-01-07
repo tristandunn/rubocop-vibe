@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
+RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
   describe "#on_class" do
-    context "when model elements are in correct order" do
+    context "when Rails model elements are in correct order" do
       it "does not register an offense" do
         expect_no_offenses(<<~RUBY)
           class User < ApplicationRecord
@@ -282,7 +282,7 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
       end
     end
 
-    context "when model has only one element" do
+    context "when Rails model has only one element" do
       it "does not register an offense" do
         expect_no_offenses(<<~RUBY)
           class User < ApplicationRecord
@@ -461,7 +461,7 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
       end
     end
 
-    context "when model has all sections" do
+    context "when Rails model has all sections" do
       it "enforces complete ordering" do
         expect_no_offenses(<<~RUBY)
           class User < ApplicationRecord
