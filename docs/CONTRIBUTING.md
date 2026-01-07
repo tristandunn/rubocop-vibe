@@ -1,0 +1,67 @@
+# Contributing
+
+When contributing to rubocop-vibe, please first discuss the change you wish to
+make via GitHub Issues before making the change.
+
+Please note we have a [code of conduct](CODE_OF_CONDUCT.md), which you should
+follow it in all your interactions with the project.
+
+## Development Environment
+
+### Requirements
+
+You need the following software installed for local development:
+
+- [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
+
+### Setup
+
+To get started, clone the repository.
+
+```sh
+git clone https://github.com/tristandunn/rubocop-vibe
+```
+
+Install the dependencies.
+
+```sh
+bundle install
+```
+
+You can verify everything is installed and setup correctly by running the
+linting with auto-correct and the tests.
+
+```sh
+bundle exec rake rubocop:autocorrect
+bundle exec rake spec
+```
+
+## Issues and Feature Requests
+
+You've found a bug in the source code, a mistake in the documentation, or maybe
+you'd like a new feature? You can help by submitting an issue to [GitHub
+Issues](https://github.com/tristandunn/rubocop-vibe/issues). Before you create
+an issue, make sure you search the archive, maybe your question was already
+answered.
+
+Please try to create bug reports that are:
+
+- _Reproducible._ Include steps to reproduce the problem.
+- _Specific._ Include as much detail as possible.
+- _Unique._ Do not duplicate existing opened issues.
+- _Scoped._ Limit each issue to a single bug report.
+
+## Pull Requests
+
+1. Search our repository for open or closed [pull
+   requests](https://github.com/tristandunn/rubocop-vibe/pulls) that relates to
+   your submission. You don't want to duplicate effort.
+1. Fork the project.
+1. Create your feature branch. (`git switch -c add-new-feature`)
+1. Commit your changes. (`git commit -m "Add a new feature."`)
+1. Push to the branch. (`git push origin add-new-feature`)
+1. Open a pull request, providing details to the template where relevant.
+
+When you're writing a commit message, try to summarize the changes into one
+sentence on the first line. If a more details are helpful, provide them in
+paragraphs below the first line.
