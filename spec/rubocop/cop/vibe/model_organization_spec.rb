@@ -224,10 +224,8 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             end
 
             CONSTANT = 42
-            ^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
 
             include Helpers
-            ^^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -302,12 +300,10 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             public
 
             def admin?
-            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               role == "admin"
             end
 
             def active?
-            ^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               status == "active"
             end
           end

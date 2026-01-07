@@ -94,12 +94,13 @@ module RuboCop
         # @return [void]
         def check_violations(node, elements, is_model)
           violations = find_violations(elements)
-          message    = is_model ? MODEL_MSG : CLASS_MSG
+          return if violations.empty?
 
-          violations.each do |element|
-            add_offense(element[:node], message: message) do |corrector|
-              autocorrect(corrector, node, elements)
-            end
+          message = is_model ? MODEL_MSG : CLASS_MSG
+
+          # Register offense on first violation only, but autocorrect sorts all elements
+          add_offense(violations.first[:node], message: message) do |corrector|
+            autocorrect(corrector, node, elements)
           end
         end
 
