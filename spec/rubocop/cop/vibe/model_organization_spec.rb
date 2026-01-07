@@ -783,5 +783,27 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
         RUBY
       end
     end
+
+    context "when class is a Rails controller" do
+      it "does not register an offense (defers to Rails/ActionOrder)" do
+        expect_no_offenses(<<~RUBY)
+          class UsersController < ApplicationController
+            def show
+              @user = User.find(params[:id])
+            end
+
+            def index
+              @users = User.all
+            end
+
+            private
+
+            def user_params
+              params.require(:user).permit(:name)
+            end
+          end
+        RUBY
+      end
+    end
   end
 end

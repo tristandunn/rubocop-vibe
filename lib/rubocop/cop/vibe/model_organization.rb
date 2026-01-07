@@ -109,10 +109,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The class node.
         # @return [void]
         def on_class(node)
-          is_model = rails_model?(node)
-          return if !is_model && !node.body
+          is_model      = rails_model?(node)
+          is_controller = rails_controller?(node)
+          return if !is_model && !is_controller && !node.body
 
-          elements = extract_elements(node, is_model)
+          elements = extract_elements(node, is_model: is_model, is_controller: is_controller)
           return if elements.size < 2
 
           check_violations(node, elements, is_model)
@@ -136,14 +137,31 @@ module RuboCop
             parent_name.end_with?("::ApplicationRecord")
         end
 
+        # Check if this is a Rails controller.
+        #
+        # @param [RuboCop::AST::Node] node The class node.
+        # @return [Boolean]
+        def rails_controller?(node)
+          return false unless node.parent_class
+
+          parent_name = node.parent_class.const_name
+          return false unless parent_name
+
+          # Check for direct ActionController inheritance
+          parent_name == "ApplicationController" ||
+            parent_name == "ActionController::Base" ||
+            parent_name.end_with?("::ApplicationController")
+        end
+
         # Extract and categorize elements from the class.
         #
         # @param [RuboCop::AST::Node] node The class node.
         # @param [Boolean] is_model Whether this is a Rails model.
+        # @param [Boolean] is_controller Whether this is a Rails controller.
         # @return [Array<Hash>] Array of element info.
-        def extract_elements(node, is_model)
+        def extract_elements(node, is_model:, is_controller: false)
           if node.body
-            collect_elements(node.body, is_model)
+            collect_elements(node.body, is_model, is_controller)
           else
             []
           end
@@ -153,15 +171,16 @@ module RuboCop
         #
         # @param [RuboCop::AST::Node] body The body node.
         # @param [Boolean] is_model Whether this is a Rails model.
+        # @param [Boolean] is_controller Whether this is a Rails controller.
         # @return [Array<Hash>] Array of element hashes.
-        def collect_elements(body, is_model)
+        def collect_elements(body, is_model, is_controller)
           visibility = :public
           elements   = []
           index      = 0
           process_body_nodes(body).each do |child|
             visibility = child.method_name if visibility_modifier?(child)
 
-            element = build_element(child, visibility, index, is_model)
+            element = build_element(child, visibility, index, is_model, is_controller)
             elements << element and index += 1 if element
           end
 
@@ -174,13 +193,17 @@ module RuboCop
         # @param [Symbol] visibility The current visibility.
         # @param [Integer] index The original index.
         # @param [Boolean] is_model Whether this is a Rails model.
+        # @param [Boolean] is_controller Whether this is a Rails controller.
         # @return [Hash]
         # @return [nil]
-        def build_element(child, visibility, index, is_model)
+        def build_element(child, visibility, index, is_model, is_controller)
           return unless categorizable?(child)
 
           category = categorize_node(child, visibility, is_model)
           return unless category
+
+          # Skip public instance methods in controllers (Rails/ActionOrder handles them)
+          return if is_controller && category == :instance_methods && visibility == :public
 
           element_hash(child, category, visibility, index, is_model)
         end
