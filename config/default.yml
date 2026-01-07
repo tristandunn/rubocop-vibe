@@ -74,6 +74,12 @@ Vibe/ConsecutiveAssignmentAlignment:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
+Vibe/ConsecutiveConstantAlignment:
+  Description: "Enforces alignment of consecutive constant assignments at the = operator."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.2.0"
+
 Vibe/DescribeBlockOrder:
   Description: "Enforces consistent ordering of describe blocks in RSpec files."
   Enabled: true

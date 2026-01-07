@@ -59,7 +59,7 @@ module RuboCop
         # Default priority for descriptions that can't be categorized (e.g., constants, variables)
         DEFAULT_PRIORITY = 999
 
-        MODEL_ORDER = %w(class associations validations).freeze
+        MODEL_ORDER        = %w(class associations validations).freeze
         CONTROLLER_ACTIONS = %w(index show new create edit update destroy).freeze
         SPECIAL_SECTIONS = {
           "class"        => 0,
