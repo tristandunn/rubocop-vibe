@@ -110,10 +110,10 @@ module RuboCop
           siblings   = node.parent.children
           node_index = siblings.index(node)
 
-          # Check for other guard clauses before this one
+          # Check for other guard clauses before this one.
           preceding_guards = siblings[0...node_index].any? { |sibling| any_guard_clause?(sibling) }
 
-          # Check for other guard clauses after this one
+          # Check for other guard clauses after this one.
           following_guards = siblings[(node_index + 1)..].any? { |sibling| any_guard_clause?(sibling) }
 
           preceding_guards || following_guards
@@ -174,6 +174,11 @@ module RuboCop
 
         # Build if/else replacement code.
         #
+        # @param condition [String] The condition expression.
+        # @param remaining_code [String] The remaining code to execute.
+        # @param return_value [String] The return value for the else branch.
+        # @param base_indent [String] The base indentation level.
+        # @param inner_indent [String] The inner indentation level.
         # @return [String]
         def build_if_else_replacement(condition, remaining_code, return_value, base_indent, inner_indent)
           [
@@ -187,6 +192,10 @@ module RuboCop
 
         # Build if replacement code.
         #
+        # @param condition [String] The condition expression.
+        # @param remaining_code [String] The remaining code to execute.
+        # @param base_indent [String] The base indentation level.
+        # @param inner_indent [String] The inner indentation level.
         # @return [String]
         def build_if_replacement(condition, remaining_code, base_indent, inner_indent)
           [

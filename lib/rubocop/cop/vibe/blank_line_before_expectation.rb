@@ -119,11 +119,11 @@ module RuboCop
         def find_expect_node(node)
           return unless node.send_type?
 
-          # Check if this node itself is an expect call
+          # Check if this node itself is an expect call.
           return node if expect_call?(node)
 
-          # Search descendants for expect calls
-          # This includes expect { ... } which has a block attached
+          # Search descendants for expect calls.
+          # This includes expect { ... } which has a block attached.
           node.each_descendant(:send).find { |send_node| expect_call?(send_node) }
         end
 

@@ -6,8 +6,8 @@ module RuboCop
       # Enforces consistent ordering of describe blocks in RSpec files.
       #
       # Universal order: "class" → "constants" → ".class_method" → "#instance_method"
-      # Models add: "associations" and "validations" between "constants" and methods
-      # Controllers add: RESTful actions between "constants" and methods
+      # Models add: "associations" and "validations" between "constants" and methods.
+      # Controllers add: RESTful actions between "constants" and methods.
       #
       # @example
       #   # bad
@@ -159,18 +159,18 @@ module RuboCop
             first_arg.value
           elsif first_arg.sym_type?
             first_arg.value.to_s
-            # Intentionally returns nil for constants/variables
-            # These will get DEFAULT_PRIORITY
+            # Intentionally returns nil for constants/variables.
+            # These will get DEFAULT_PRIORITY.
           end
         end
 
         # Categorize description and assign priority.
         #
         # Universal order: class (0) → constants (5) → .class_method (100) → #instance_method (200)
-        # Models insert: associations (10), validations (20) between class and methods
-        # Controllers insert: RESTful actions (30-36) between class and methods
-        # Non-special descriptions get NON_SPECIAL_DESCRIPTION_PRIORITY (300)
-        # nil descriptions get DEFAULT_PRIORITY (999)
+        # Models insert: associations (10), validations (20) between class and methods.
+        # Controllers insert: RESTful actions (30-36) between class and methods.
+        # Non-special descriptions get NON_SPECIAL_DESCRIPTION_PRIORITY (300).
+        # nil descriptions get DEFAULT_PRIORITY (999).
         #
         # @param [String, nil] description The describe block description.
         # @return [Integer] Priority number (lower = earlier).
@@ -200,7 +200,7 @@ module RuboCop
         # @return [Integer]
         # @return [nil] When not a controller action.
         def controller_action_priority(description)
-          # Strip the # prefix for controller actions
+          # Strip the # prefix for controller actions.
           action_name = description.start_with?("#") ? description[1..] : description
           if controller_action?(action_name)
             30 + CONTROLLER_ACTIONS.index(action_name)

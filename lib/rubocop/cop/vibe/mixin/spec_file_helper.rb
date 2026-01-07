@@ -3,7 +3,6 @@
 module RuboCop
   module Cop
     module Vibe
-      # Shared helper methods for spec file handling.
       module SpecFileHelper
         SPEC_FILE_PATTERN = %r{spec/.*_spec\.rb}
 

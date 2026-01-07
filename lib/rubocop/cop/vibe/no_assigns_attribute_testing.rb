@@ -28,7 +28,7 @@ module RuboCop
 
         CONTROLLER_SPEC_PATTERN = %r{spec/controllers/.*_spec\.rb}
 
-        # Matches assigns(:variable).method_call patterns
+        # Matches assigns(:variable).method_call patterns.
         # @!method assigns_with_method?(node)
         def_node_matcher :assigns_with_method?, <<~PATTERN
           (send
@@ -36,9 +36,9 @@ module RuboCop
             $_)
         PATTERN
 
-        # Checks if assigns is being called with a method in controller specs
+        # Checks if assigns is being called with a method in controller specs.
         #
-        # @param node [RuboCop::AST::SendNode] the node being checked
+        # @param node [RuboCop::AST::SendNode] the node being checked.
         # @return [void]
         def on_send(node)
           return unless controller_spec_file?
@@ -50,9 +50,9 @@ module RuboCop
 
         private
 
-        # Checks if the current file is a controller spec
+        # Checks if the current file is a controller spec.
         #
-        # @return [Boolean] true if the file is a controller spec
+        # @return [Boolean] true if the file is a controller spec.
         def controller_spec_file?
           processed_source.file_path.match?(CONTROLLER_SPEC_PATTERN)
         end

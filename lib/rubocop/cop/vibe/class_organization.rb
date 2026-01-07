@@ -104,7 +104,7 @@ module RuboCop
 
           message = is_model ? MODEL_MSG : CLASS_MSG
 
-          # Register offense on first violation only, but autocorrect sorts all elements
+          # Register offense on first violation only, but autocorrect sorts all elements.
           add_offense(violations.first[:node], message: message) do |corrector|
             autocorrect(corrector, node, elements)
           end
@@ -137,7 +137,7 @@ module RuboCop
           parent_name = node.parent_class.const_name
           return false unless parent_name
 
-          # Check for direct ActiveRecord inheritance
+          # Check for direct ActiveRecord inheritance.
           parent_name == "ApplicationRecord" ||
             parent_name == "ActiveRecord::Base" ||
             parent_name.end_with?("::ApplicationRecord")
@@ -153,7 +153,7 @@ module RuboCop
           parent_name = node.parent_class.const_name
           return false unless parent_name
 
-          # Check for direct ActionController inheritance
+          # Check for direct ActionController inheritance.
           parent_name == "ApplicationController" ||
             parent_name == "ActionController::Base" ||
             parent_name.end_with?("::ApplicationController")
@@ -208,7 +208,7 @@ module RuboCop
           category = categorize_node(child, visibility, is_model)
           return unless category
 
-          # Skip public instance methods in controllers (Rails/ActionOrder handles them)
+          # Skip public instance methods in controllers (Rails/ActionOrder handles them).
           return if is_controller && category == :instance_methods && visibility == :public
 
           element_hash(child, category, visibility, index, is_model)

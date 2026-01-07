@@ -19,6 +19,7 @@ module RuboCop
 
       # Return the rules for the plug-in.
       #
+      # @param _context [LintRoller::Context] The runner context (unused).
       # @return [LintRoller::Rules] The rules for this plug-in.
       def rules(_context)
         LintRoller::Rules.new(

@@ -76,10 +76,10 @@ module RuboCop
         def complex_expectation?(node)
           expectation_source = node.body.source
 
-          # Multi-line expectations are complex
+          # Multi-line expectations are complex.
           return true if expectation_source.include?("\n")
 
-          # Expectations with compound matchers (.and, .or) are complex
+          # Expectations with compound matchers (.and, .or) are complex.
           compound_matcher?(node.body)
         end
 

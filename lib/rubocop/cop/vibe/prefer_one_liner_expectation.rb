@@ -75,10 +75,10 @@ module RuboCop
         def complex_expectation?(node)
           expectation_source = node.body.source
 
-          # Multi-line expectations are complex
+          # Multi-line expectations are complex.
           return true if expectation_source.include?("\n")
 
-          # Expectations with compound matchers (.and, .or) are complex
+          # Expectations with compound matchers (.and, .or) are complex.
           compound_matcher?(node.body)
         end
 
@@ -139,7 +139,7 @@ module RuboCop
         # @return [RuboCop::AST::Node]
         # @return [nil] When no expectation is found.
         def find_expectation_in_chain(node)
-          # Traverse up the chain looking for expect or is_expected
+          # Traverse up the chain looking for expect or is_expected.
           current = node
           while current&.send_type?
             return current if expectation_method?(current)
@@ -163,8 +163,8 @@ module RuboCop
           return false unless node
           return false unless node.method?(:expect) && !node.block_node
 
-          # Only enforce one-liners for expect(subject)
-          # Other receivers (user.email, described_class, etc.) should keep descriptions
+          # Only enforce one-liners for expect(subject).
+          # Other receivers (user.email, described_class, etc.) should keep descriptions.
           expect_subject?(node)
         end
 
