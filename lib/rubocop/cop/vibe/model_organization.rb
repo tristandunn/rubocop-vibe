@@ -391,6 +391,8 @@ module RuboCop
 
           if category == :scopes
             scope_sort_key(node)
+          elsif category == :class_methods && node.method?(:call)
+            "!" # Ensures call is first among class methods
           else
             node.method_name.to_s
           end

@@ -152,6 +152,35 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
       end
     end
 
+    context "when self.call is not first among class methods" do
+      it "registers an offense and autocorrects" do
+        expect_offense(<<~RUBY)
+          class Service
+            def self.process
+              new.call
+            end
+
+            def self.call
+            ^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              new.process
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            def self.call
+              new.process
+            end
+
+            def self.process
+              new.call
+            end
+          end
+        RUBY
+      end
+    end
+
     context "when instance methods are not alphabetically sorted" do
       it "registers an offense" do
         expect_offense(<<~RUBY)
@@ -194,6 +223,28 @@ RSpec.describe RuboCop::Cop::Vibe::ModelOrganization, :config do
             def initialize
             ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
               @value = 1
+            end
+          end
+        RUBY
+      end
+
+      it "does not register an offense when self.call comes after initialize" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+            def initialize
+              @value = 1
+            end
+
+            def self.call
+              new.process
+            end
+
+            def self.process
+              new
+            end
+
+            def run
+              @value
             end
           end
         RUBY
