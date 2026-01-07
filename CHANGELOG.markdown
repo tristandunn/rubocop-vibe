@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 — January 6th, 2026
 
 - Add Vibe/BlankLineBeforeExpectation cop.
 - Add Vibe/ClassOrganization cop.
