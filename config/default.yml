@@ -113,6 +113,7 @@ Vibe/NoAssignsAttributeTesting:
 Vibe/NoRubocopDisable:
   Description: "Enforces that rubocop:disable comments are not used inline."
   Enabled: true
+  AllowedCops: []
   VersionAdded: "0.1.0"
 
 Vibe/NoSkippedTests:
