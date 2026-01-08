@@ -132,6 +132,12 @@ Vibe/PreferOneLinerExpectation:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
+Vibe/RspecStubChainStyle:
+  Description: "Enforces that RSpec stub chains are split across lines when too long."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.2.0"
+
 Vibe/ServiceCallMethod:
   Description: "Service objects should define `self.call` and `call` methods."
   Enabled: true

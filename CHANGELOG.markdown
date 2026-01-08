@@ -4,6 +4,7 @@
 
 - Add Vibe/ConsecutiveConstantAlignment cop.
 - Add Vibe/ConsecutiveLetAlignment cop.
+- Add Vibe/RspecStubChainStyle cop.
 
 ## 0.1.0 — January 6th, 2026
 
