@@ -4,6 +4,7 @@
 
 - Add Vibe/ConsecutiveConstantAlignment cop.
 - Add Vibe/ConsecutiveLetAlignment cop.
+- Add Vibe/RaiseUnlessBlock cop.
 - Add Vibe/RspecStubChainStyle cop.
 - Add AllowedCops configuration to Vibe/NoRubocopDisable cop.
 
