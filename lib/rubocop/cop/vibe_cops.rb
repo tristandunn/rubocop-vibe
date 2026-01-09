@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "vibe/mixin/alignment_helpers"
 require_relative "vibe/mixin/spec_file_helper"
 
 require_relative "vibe/blank_line_before_expectation"

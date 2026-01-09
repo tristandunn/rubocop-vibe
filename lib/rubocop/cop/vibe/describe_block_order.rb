@@ -159,9 +159,8 @@ module RuboCop
             first_arg.value
           elsif first_arg.sym_type?
             first_arg.value.to_s
-            # Intentionally returns nil for constants/variables.
-            # These will get DEFAULT_PRIORITY.
           end
+          # Returns nil for constants/variables - they get DEFAULT_PRIORITY.
         end
 
         # Categorize description and assign priority.

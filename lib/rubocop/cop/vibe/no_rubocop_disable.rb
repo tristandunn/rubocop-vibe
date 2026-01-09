@@ -33,6 +33,9 @@ module RuboCop
       #   task :my_task do
       #     # ...
       #   end
+      #
+      # NOTE: Examples use underscore (rubocop_disable) to prevent RuboCop from
+      # parsing them as actual directives. In real code, use colon (rubocop:disable).
       class NoRubocopDisable < Base
         MSG        = "Do not disable `%<cops>s`. Fix the issue or configure globally in `.rubocop.yml`."
         MSG_NO_COP = "Do not use `# rubocop:disable`. Fix the issue or configure globally in `.rubocop.yml`."
