@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — Unreleased
+## 0.2.0 — January 8th, 2026
 
 - Add Vibe/ConsecutiveConstantAlignment cop.
 - Add Vibe/ConsecutiveLetAlignment cop.
