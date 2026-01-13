@@ -68,6 +68,12 @@ Vibe/BlankLineBeforeExpectation:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
+Vibe/ClassOrganization:
+  Description: "Enforces consistent organization of class definitions."
+  Enabled: true
+  SafeAutoCorrect: false
+  VersionAdded: "0.1.0"
+
 Vibe/ConsecutiveAssignmentAlignment:
   Description: "Enforces alignment of consecutive variable assignments at the = operator."
   Enabled: true
@@ -98,11 +104,11 @@ Vibe/IsExpectedOneLiner:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
-Vibe/ClassOrganization:
-  Description: "Enforces consistent organization of class definitions."
+Vibe/MultilineHashArgumentStyle:
+  Description: "Enforces one-per-line and alphabetical ordering for hash arguments in multiline method calls."
   Enabled: true
-  SafeAutoCorrect: false
-  VersionAdded: "0.1.0"
+  SafeAutoCorrect: true
+  VersionAdded: "0.3.0"
 
 Vibe/NoAssignsAttributeTesting:
   Description: "Enforces that controller specs only test assignment identity, not attributes or associations."

@@ -10,10 +10,10 @@ module RuboCop
       # @return [LintRoller::About] Information about the plug-in.
       def about
         LintRoller::About.new(
-          name:        "rubocop-vibe",
-          version:     VERSION,
+          description: "A set of custom cops to use on AI generated code.",
           homepage:    "https://github.com/tristandunn/rubocop-vibe",
-          description: "A set of custom cops to use on AI generated code."
+          name:        "rubocop-vibe",
+          version:     VERSION
         )
       end
 
@@ -23,8 +23,8 @@ module RuboCop
       # @return [LintRoller::Rules] The rules for this plug-in.
       def rules(_context)
         LintRoller::Rules.new(
-          type:          :path,
           config_format: :rubocop,
+          type:          :path,
           value:         Pathname.new(__dir__).join("../../../config/default.yml")
         )
       end

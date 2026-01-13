@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Vibe/MultilineHashArgumentStyle cop.
+
 ## 0.2.0 — January 8th, 2026
 
 - Add Vibe/ConsecutiveConstantAlignment cop.
