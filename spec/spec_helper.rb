@@ -3,7 +3,7 @@
 require "simplecov"
 require "simplecov-console"
 
-if ENV["CI"] || ENV["COVERAGE"]
+if ENV.fetch("CI", ENV.fetch("COVERAGE", false))
   SimpleCov.formatter = SimpleCov::Formatter::Console
   SimpleCov.start do
     add_filter("spec/")

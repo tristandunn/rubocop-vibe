@@ -15,3 +15,7 @@ Metrics/ClassLength:
 
 RSpec/ExampleLength:
   Enabled: false
+
+Vibe/NoCompoundConditions:
+  Exclude:
+    - "lib/rubocop/cop/**/*.rb"

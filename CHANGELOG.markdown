@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/MultilineHashArgumentStyle cop.
+- Add Vibe/NoCompoundConditions cop.
 
 ## 0.2.0 — January 8th, 2026
 

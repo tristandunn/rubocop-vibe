@@ -116,6 +116,11 @@ Vibe/NoAssignsAttributeTesting:
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
+Vibe/NoCompoundConditions:
+  Description: "Enforces extracting compound boolean conditions into named methods."
+  Enabled: true
+  VersionAdded: "0.3.0"
+
 Vibe/NoRubocopDisable:
   Description: "Enforces that rubocop:disable comments are not used inline."
   Enabled: true
