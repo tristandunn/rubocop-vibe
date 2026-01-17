@@ -67,7 +67,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] body The block body.
         # @return [Array<RuboCop::AST::Node>]
         def extract_statements(body)
-          body.begin_type? ? body.children : [body]
+          if body.begin_type?
+            body.children
+          else
+            [body]
+          end
         end
 
         # Check statements for missing blank lines before expectations.

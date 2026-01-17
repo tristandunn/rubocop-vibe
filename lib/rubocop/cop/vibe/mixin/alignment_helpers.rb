@@ -15,7 +15,11 @@ module RuboCop
         # @param [RuboCop::AST::Node] body The body node.
         # @return [Array<RuboCop::AST::Node>]
         def extract_statements(body)
-          body.begin_type? ? body.children : [body]
+          if body.begin_type?
+            body.children
+          else
+            [body]
+          end
         end
 
         # Group consecutive statements based on a predicate.

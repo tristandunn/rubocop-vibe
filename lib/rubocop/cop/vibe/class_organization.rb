@@ -601,7 +601,9 @@ module RuboCop
         # @param [Symbol] last_category The last category.
         # @return [void]
         def add_category_separator(parts, _category, last_category)
-          parts << "\n" if last_category
+          if last_category
+            parts << "\n"
+          end
         end
       end
     end

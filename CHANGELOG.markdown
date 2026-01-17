@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/ConsecutiveIndexedAssignmentAlignment cop.
+- Add Vibe/ExplicitReturnConditional cop.
 - Add Vibe/MultilineHashArgumentStyle cop.
 - Add Vibe/NoCompoundConditions cop.
 

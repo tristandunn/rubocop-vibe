@@ -104,6 +104,12 @@ Vibe/DescribeBlockOrder:
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
 
+Vibe/ExplicitReturnConditional:
+  Description: "Enforces explicit if/else/end blocks instead of ternary or trailing conditionals for return values."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.3.0"
+
 Vibe/IsExpectedOneLiner:
   Description: "Enforces that is_expected is only used in one-liner it { } blocks."
   Enabled: true
