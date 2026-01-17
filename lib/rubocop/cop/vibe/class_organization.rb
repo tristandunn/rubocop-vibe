@@ -100,6 +100,7 @@ module RuboCop
         # @return [void]
         def check_violations(node, elements, is_model)
           violations = find_violations(elements)
+
           return if violations.empty?
 
           message = is_model ? MODEL_MSG : CLASS_MSG
@@ -117,9 +118,11 @@ module RuboCop
         def on_class(node)
           is_model      = rails_model?(node)
           is_controller = rails_controller?(node)
+
           return if !is_model && !is_controller && !node.body
 
           elements = extract_elements(node, is_model: is_model, is_controller: is_controller)
+
           return if elements.size < 2
 
           check_violations(node, elements, is_model)
@@ -135,6 +138,7 @@ module RuboCop
           return false unless node.parent_class
 
           parent_name = node.parent_class.const_name
+
           return false unless parent_name
 
           # Check for direct ActiveRecord inheritance.
@@ -151,6 +155,7 @@ module RuboCop
           return false unless node.parent_class
 
           parent_name = node.parent_class.const_name
+
           return false unless parent_name
 
           # Check for direct ActionController inheritance.
@@ -183,10 +188,12 @@ module RuboCop
           visibility = :public
           elements   = []
           index      = 0
+
           process_body_nodes(body).each do |child|
             visibility = child.method_name if visibility_modifier?(child)
 
             element = build_element(child, visibility, index, is_model, is_controller)
+
             elements << element and index += 1 if element
           end
 
@@ -206,6 +213,7 @@ module RuboCop
           return unless categorizable?(child)
 
           category = categorize_node(child, visibility, is_model)
+
           return unless category
 
           # Skip public instance methods in controllers (Rails/ActionOrder handles them).
@@ -242,6 +250,7 @@ module RuboCop
         # @return [Array<Hash>] Array of hashes with :text and :column.
         def extract_source_with_comments(node)
           lines = extract_comment_lines(node)
+
           lines.concat(extract_node_lines(node))
         end
 
@@ -264,6 +273,7 @@ module RuboCop
 
           node.source.lines.map.with_index do |line, idx|
             col = idx.zero? ? node_column : line[/\A\s*/].length
+
             { text: line.chomp, column: col }
           end
         end
@@ -384,6 +394,7 @@ module RuboCop
         # @return [Integer]
         def priority_for(category, _node, is_model)
           priorities = is_model ? MODEL_PRIORITIES : CLASS_PRIORITIES
+
           priorities[category] || 999
         end
 
@@ -410,6 +421,7 @@ module RuboCop
         # @return [String]
         def scope_sort_key(node)
           first_arg = node.first_argument
+
           return "" if first_arg.nil?
           return "" unless first_arg.sym_type?
 
@@ -471,6 +483,7 @@ module RuboCop
           base_column = calculate_base_indent(elements)
           replacement = build_replacement(sorted, base_column)
           range       = replacement_range(class_node, elements)
+
           corrector.replace(range, replacement.chomp)
         end
 
@@ -544,6 +557,7 @@ module RuboCop
         # @return [Integer] The base indentation column.
         def calculate_base_indent(elements)
           first_elem = elements.min_by { |e| e[:node].source_range.begin_pos }
+
           first_elem[:node].source_range.column
         end
 
@@ -558,6 +572,7 @@ module RuboCop
 
           source_lines.map do |line|
             relative_indent = " " * [0, line[:column] - min_column].max
+
             "#{indent}#{relative_indent}#{line[:text].lstrip}"
           end.join("\n")
         end
@@ -575,6 +590,7 @@ module RuboCop
           state[:category] = element[:category]
 
           rendered_source = render_source(element[:source], state[:column])
+
           state[:parts] << rendered_source << "\n"
         end
 
@@ -587,6 +603,7 @@ module RuboCop
           return if new_visibility == state[:visibility]
 
           indent = " " * state[:column]
+
           state[:parts] << "\n" if state[:parts].any?
           state[:parts] << "#{indent}#{new_visibility}\n"
         end

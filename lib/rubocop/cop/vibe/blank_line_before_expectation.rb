@@ -93,6 +93,7 @@ module RuboCop
         # @return [void]
         def check_statement_pair(previous_statement, current_statement)
           expect_node = find_expect_node(current_statement)
+
           return unless expect_node
           return if blank_line_between?(previous_statement, current_statement)
           return if find_expect_node(previous_statement)

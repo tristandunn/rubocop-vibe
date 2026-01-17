@@ -98,6 +98,7 @@ module RuboCop
         def following_statements?(parent, node)
           siblings   = parent.children
           node_index = siblings.index(node)
+
           siblings[(node_index + 1)..].any?
         end
 
@@ -151,6 +152,7 @@ module RuboCop
         def autocorrect(corrector, node)
           replacement = build_replacement(node)
           range       = replacement_range(node)
+
           corrector.replace(range, replacement)
         end
 
@@ -212,6 +214,7 @@ module RuboCop
         def get_remaining_code(node)
           siblings   = node.parent.children
           node_index = siblings.index(node)
+
           siblings[(node_index + 1)..].map(&:source).join("\n")
         end
 
@@ -223,6 +226,7 @@ module RuboCop
           siblings  = node.parent.children
           start_pos = node.source_range.begin_pos
           end_pos   = siblings.last.source_range.end_pos
+
           Parser::Source::Range.new(node.source_range.source_buffer, start_pos, end_pos)
         end
 

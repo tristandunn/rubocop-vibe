@@ -75,6 +75,7 @@ module RuboCop
         # @return [Boolean]
         def in_conditional_position?(node)
           ancestor = conditional_ancestor(node)
+
           if ancestor
             condition_of_ancestor?(node, ancestor)
           else
@@ -97,6 +98,7 @@ module RuboCop
         # @return [Boolean]
         def condition_of_ancestor?(node, ancestor)
           condition = condition_node(ancestor)
+
           node_within_condition?(node, condition)
         end
 

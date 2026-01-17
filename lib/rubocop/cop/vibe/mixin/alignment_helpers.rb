@@ -32,6 +32,7 @@ module RuboCop
         # @return [Array<Array<RuboCop::AST::Node>>] Groups of consecutive matching statements.
         def group_consecutive_statements(statements, &)
           matching_with_indices = find_matching_statements(statements, &)
+
           group_by_consecutive_lines(matching_with_indices, statements)
         end
 

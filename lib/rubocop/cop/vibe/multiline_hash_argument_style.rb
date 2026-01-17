@@ -42,6 +42,7 @@ module RuboCop
           return unless multiline_call_with_hash?(node)
 
           hash_arg = find_hash_argument(node)
+
           return unless hash_arg
           return unless needs_correction?(hash_arg)
 
@@ -67,6 +68,7 @@ module RuboCop
         # @return [Boolean]
         def closing_paren_on_own_line?(node)
           last_arg = node.last_argument
+
           if last_arg
             node.loc.end.line > last_arg.loc.last_line
           else
@@ -88,6 +90,7 @@ module RuboCop
         # @return [Boolean]
         def needs_correction?(hash_arg)
           pairs = hash_arg.pairs
+
           return false if pairs.size < 2
 
           multiple_pairs_on_same_line?(pairs) || !pairs_alphabetically_ordered?(pairs)
@@ -99,6 +102,7 @@ module RuboCop
         # @return [Boolean]
         def multiple_pairs_on_same_line?(pairs)
           lines = pairs.map { |pair| pair.loc.line }
+
           lines.size != lines.uniq.size
         end
 
@@ -108,6 +112,7 @@ module RuboCop
         # @return [Boolean]
         def pairs_alphabetically_ordered?(pairs)
           key_names = pairs.map { |pair| extract_key_name(pair) }
+
           key_names == key_names.sort
         end
 
@@ -117,6 +122,7 @@ module RuboCop
         # @return [String]
         def extract_key_name(pair)
           key = pair.key
+
           if key.type?(:sym, :str)
             key.value.to_s
           else
@@ -155,6 +161,7 @@ module RuboCop
           sorted_pairs.map.with_index do |pair, index|
             prefix = index.zero? ? "" : indentation
             suffix = index == sorted_pairs.size - 1 ? "" : ","
+
             "#{prefix}#{pair.source}#{suffix}"
           end.join("\n")
         end

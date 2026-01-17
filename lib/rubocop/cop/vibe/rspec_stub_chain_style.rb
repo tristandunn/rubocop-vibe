@@ -85,11 +85,13 @@ module RuboCop
         def check_receive_chain(to_node, receive_chain)
           chain         = extract_chain(receive_chain)
           receive_index = find_receive_index(chain)
+
           return unless receive_index
           return unless chain_has_with?(chain)
           return unless line_exceeds_max_length?(to_node)
 
           methods = chain[(receive_index + 1)..]
+
           check_methods_alignment(to_node, chain[receive_index], methods)
         end
 
@@ -170,6 +172,7 @@ module RuboCop
         # @return [Boolean]
         def should_flag?(previous_node, method_node, is_first)
           reference_line = is_first ? previous_node.loc.last_line : previous_node.loc.selector.line
+
           reference_line == method_node.loc.selector.line
         end
 
@@ -223,6 +226,7 @@ module RuboCop
         # @return [String]
         def calculate_indentation(node)
           base_column = find_chain_start_column(node)
+
           " " * (base_column + 2)
         end
 

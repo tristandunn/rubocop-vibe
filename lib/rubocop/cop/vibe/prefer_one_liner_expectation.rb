@@ -57,6 +57,7 @@ module RuboCop
           return unless single_statement?(node.body)
 
           expectation = extract_expectation(node.body)
+
           return unless simple_expectation?(expectation)
           return if complex_expectation?(node)
 
@@ -99,6 +100,7 @@ module RuboCop
         # @return [void]
         def autocorrect(corrector, node)
           expectation_source = node.body.source
+
           corrector.replace(node, "it { #{expectation_source} }")
         end
 
@@ -141,6 +143,7 @@ module RuboCop
         def find_expectation_in_chain(node)
           # Traverse up the chain looking for expect or is_expected.
           current = node
+
           while current&.send_type?
             return current if expectation_method?(current)
 
@@ -174,6 +177,7 @@ module RuboCop
         # @return [Boolean]
         def expect_subject?(node)
           argument = node.first_argument
+
           return false unless argument
           return false unless argument.send_type?
 

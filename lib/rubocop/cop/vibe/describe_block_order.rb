@@ -83,9 +83,11 @@ module RuboCop
           return unless top_level_describe?(node)
 
           describe_blocks = extract_describe_blocks(node)
+
           return if describe_blocks.size < 2
 
           violations = find_ordering_violations(describe_blocks)
+
           violations.each do |block_info|
             add_offense(block_info[:node]) do |corrector|
               autocorrect(corrector, describe_blocks)
@@ -153,6 +155,7 @@ module RuboCop
         # @return [nil] When description is not a string/symbol literal.
         def extract_description(node)
           first_arg = node.send_node.first_argument
+
           return unless first_arg
 
           if first_arg.str_type?
@@ -201,6 +204,7 @@ module RuboCop
         def controller_action_priority(description)
           # Strip the # prefix for controller actions.
           action_name = description.start_with?("#") ? description[1..] : description
+
           if controller_action?(action_name)
             30 + CONTROLLER_ACTIONS.index(action_name)
           end
@@ -250,6 +254,7 @@ module RuboCop
 
           blocks.each_with_index do |block, index|
             sorted_block = sorted_blocks[index]
+
             next if block == sorted_block
 
             corrector.replace(block[:node], sorted_block[:node].source)

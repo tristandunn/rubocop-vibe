@@ -45,6 +45,7 @@ module RuboCop
           return unless is_expected_call?(node)
 
           example_block = find_example_block(node)
+
           return unless example_block
           return unless example_block_with_description?(example_block)
           return if complex_expectation?(example_block)
@@ -65,6 +66,7 @@ module RuboCop
         def find_example_block(node)
           node.each_ancestor(:block).find do |ancestor|
             send_node = ancestor.send_node
+
             send_node.method?(:it) || send_node.method?(:specify)
           end
         end
@@ -100,6 +102,7 @@ module RuboCop
         # @return [void]
         def autocorrect(corrector, node)
           expectation_source = node.body.source
+
           corrector.replace(node, "it { #{expectation_source} }")
         end
       end

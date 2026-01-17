@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add Vibe/BlankLineAfterAssignment cop.
 - Add Vibe/ConsecutiveIndexedAssignmentAlignment cop.
 - Add Vibe/ExplicitReturnConditional cop.
 - Add Vibe/MultilineHashArgumentStyle cop.

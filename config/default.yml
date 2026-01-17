@@ -62,6 +62,12 @@ Style/StringLiterals:
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
 
+Vibe/BlankLineAfterAssignment:
+  Description: "Enforces a blank line after variable assignments when followed by other code."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.3.0"
+
 Vibe/BlankLineBeforeExpectation:
   Description: "Enforces a blank line before expectation calls when there is setup code above."
   Enabled: true

@@ -63,6 +63,7 @@ module RuboCop
         # @return [void]
         def autocorrect(corrector, node)
           replacement = build_replacement(node)
+
           corrector.replace(node, replacement)
         end
 

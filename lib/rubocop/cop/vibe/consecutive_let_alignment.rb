@@ -67,9 +67,11 @@ module RuboCop
         # @return [void]
         def check_lets_in_body(body)
           statements = extract_statements(body)
+
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |s| let_declaration?(s) }
+
           groups.each { |group| check_group_alignment(group) }
         end
 
@@ -83,6 +85,7 @@ module RuboCop
 
           group.each do |let|
             current_column = let.loc.begin.column
+
             next if current_column == target_column
 
             add_offense(let.send_node) do |corrector|

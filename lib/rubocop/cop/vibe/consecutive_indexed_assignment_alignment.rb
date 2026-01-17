@@ -57,9 +57,11 @@ module RuboCop
         # @return [void]
         def check_indexed_assignments_in_body(body)
           statements = extract_statements(body)
+
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |s| indexed_assignment?(s) }
+
           groups.each { |group| check_group_alignment(group) }
         end
 
@@ -81,6 +83,7 @@ module RuboCop
 
           group.each do |asgn|
             current_column = asgn.loc.operator.column
+
             next if current_column == target_column
 
             add_offense(offense_location(asgn)) do |corrector|

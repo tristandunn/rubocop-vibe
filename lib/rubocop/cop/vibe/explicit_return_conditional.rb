@@ -69,6 +69,7 @@ module RuboCop
         # @return [void]
         def check_return_value(body)
           return_node = find_return_node(body)
+
           return unless return_node.if_type?
 
           if return_node.ternary?

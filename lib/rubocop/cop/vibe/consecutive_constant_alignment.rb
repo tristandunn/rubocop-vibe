@@ -59,9 +59,11 @@ module RuboCop
         # @return [void]
         def check_constants_in_body(body)
           statements = extract_statements(body)
+
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |s| s.casgn_type? && s.single_line? }
+
           groups.each { |group| check_group_alignment(group) }
         end
 
@@ -75,6 +77,7 @@ module RuboCop
 
           group.each do |const|
             current_column = const.loc.operator.column
+
             next if current_column == target_column
 
             add_offense(const.loc.name) do |corrector|

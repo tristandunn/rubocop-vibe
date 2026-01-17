@@ -105,6 +105,7 @@ module RuboCop
         # @return [void]
         def check_x_method(node)
           method_name = x_method_call?(node)
+
           if method_name
             add_offense(node, message: format(MSG_XMETHOD, method: method_name))
           end

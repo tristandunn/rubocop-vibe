@@ -3,6 +3,7 @@
 require_relative "vibe/mixin/alignment_helpers"
 require_relative "vibe/mixin/spec_file_helper"
 
+require_relative "vibe/blank_line_after_assignment"
 require_relative "vibe/blank_line_before_expectation"
 require_relative "vibe/class_organization"
 require_relative "vibe/consecutive_assignment_alignment"
