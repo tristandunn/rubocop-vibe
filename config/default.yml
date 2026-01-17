@@ -86,6 +86,12 @@ Vibe/ConsecutiveConstantAlignment:
   SafeAutoCorrect: true
   VersionAdded: "0.2.0"
 
+Vibe/ConsecutiveIndexedAssignmentAlignment:
+  Description: "Enforces alignment of consecutive indexed assignments at the = operator."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.3.0"
+
 Vibe/ConsecutiveLetAlignment:
   Description: "Enforces alignment of consecutive let declarations at the { brace."
   Enabled: true
