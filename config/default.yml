@@ -168,6 +168,12 @@ Vibe/RaiseUnlessBlock:
   SafeAutoCorrect: true
   VersionAdded: "0.2.0"
 
+Vibe/RspecBeforeBlockStyle:
+  Description: "Enforces using do...end syntax instead of braces for RSpec before/after/around blocks."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.3.0"
+
 Vibe/RspecStubChainStyle:
   Description: "Enforces that RSpec stub chains are split across lines when too long."
   Enabled: true

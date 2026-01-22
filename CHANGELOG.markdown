@@ -7,6 +7,7 @@
 - Add Vibe/ExplicitReturnConditional cop.
 - Add Vibe/MultilineHashArgumentStyle cop.
 - Add Vibe/NoCompoundConditions cop.
+- Add Vibe/RspecBeforeBlockStyle cop.
 
 ## 0.2.0 — January 8th, 2026
 
