@@ -100,14 +100,28 @@ module RuboCop
         # @return [void]
         def check_statement_pair(current, following)
           return unless assignment?(current)
-          return if assignment?(following)
+
+          inner_following = inner_statement(following)
+
+          return if assignment?(inner_following)
           return if blank_line_between?(current, following)
-          return if following_uses_assigned_variable?(current, following)
+          return if following_uses_assigned_variable?(current, inner_following)
           return if consecutive_factory_bot_calls?(current, following)
 
           add_offense(following) do |corrector|
             corrector.insert_after(current, "\n")
           end
+        end
+
+        # Get the inner statement from a modifier node.
+        #
+        # @param [RuboCop::AST::Node] node The node to unwrap.
+        # @return [RuboCop::AST::Node]
+        def inner_statement(node)
+          return node.if_branch if node.type?(:if) && node.modifier_form?
+          return node.body if node.type?(:while, :until) && node.modifier_form?
+
+          node
         end
 
         # Check if both statements are FactoryBot calls.

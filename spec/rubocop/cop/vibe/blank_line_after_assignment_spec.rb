@@ -57,6 +57,46 @@ RSpec.describe RuboCop::Cop::Vibe::BlankLineAfterAssignment, :config do
           end
         RUBY
       end
+
+      it "does not register an offense when following assignment has if modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            item = item.split(RANGE_SEPARATOR, 2)
+            item = Range.new(*item) if item.size == 2
+            item.to_a
+          end
+        RUBY
+      end
+
+      it "does not register an offense when following assignment has unless modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            value = compute
+            value = default unless value
+            value
+          end
+        RUBY
+      end
+
+      it "does not register an offense when following assignment has while modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            item = queue.pop
+            item = queue.pop while item.nil?
+            item
+          end
+        RUBY
+      end
+
+      it "does not register an offense when following assignment has until modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            result = attempt
+            result = attempt until result
+            result
+          end
+        RUBY
+      end
     end
 
     context "when next line uses the assigned variable" do
@@ -74,6 +114,26 @@ RSpec.describe RuboCop::Cop::Vibe::BlankLineAfterAssignment, :config do
           def process
             result = calculate
             result.save
+          end
+        RUBY
+      end
+
+      it "does not register an offense when next line operates on the variable with if modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            class_names = [format(CLASS_FORMAT, line: line)]
+            class_names << HIGHLIGHT_LINE_CLASS if lines.include?(line)
+            class_names.join(SPACE)
+          end
+        RUBY
+      end
+
+      it "does not register an offense when next line operates on the variable with unless modifier" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            items = []
+            items << item unless item.nil?
+            items
           end
         RUBY
       end
