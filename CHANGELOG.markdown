@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — January 22nd, 2026
 
 - Add Vibe/BlankLineAfterAssignment cop.
 - Add Vibe/ConsecutiveIndexedAssignmentAlignment cop.
