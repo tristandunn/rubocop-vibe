@@ -2,7 +2,7 @@
 allowed-tools:
   - Bash(bundle exec rake)
   - Bash(bundle exec rake build)
-  - Bash(bundle update)
+  - Bash(bundle update --all)
   - Edit(CHANGELOG.markdown)
   - Edit(lib/rubocop/vibe/version.rb)
 ---
@@ -61,7 +61,7 @@ Run these commands in sequence, stopping if any fail:
 
 1. Update dependencies:
    ```bash
-   bundle update
+   bundle update --all
    ```
 
 2. Run linting and tests (must pass with 100% coverage):
