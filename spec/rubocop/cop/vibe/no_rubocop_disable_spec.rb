@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe RuboCop::Cop::Vibe::NoRubocopDisable, :config do
-  let(:cop_config)   { { "AllowedCops" => allowed_cops } }
   let(:allowed_cops) { [] }
+  let(:cop_config)   { { "AllowedCops" => allowed_cops } }
 
   describe "#on_new_investigation" do
     context "when there are no rubocop:disable comments" do

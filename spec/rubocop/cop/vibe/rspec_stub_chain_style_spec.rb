@@ -2,12 +2,13 @@
 
 RSpec.describe RuboCop::Cop::Vibe::RspecStubChainStyle, :config do
   let(:cop_config)      { {} }
-  let(:other_cops)      do
+  let(:max_line_length) { 80 }
+
+  let(:other_cops) do
     {
       "Layout/LineLength" => { "Max" => max_line_length }
     }
   end
-  let(:max_line_length) { 80 }
 
   describe "#on_send" do
     context "when line exceeds max length with .with on same line as receive" do
