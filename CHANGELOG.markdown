@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Vibe/ConsecutiveInstanceVariableAssignmentAlignment cop.
+
 ## 0.3.0 — January 22nd, 2026
 
 - Add Vibe/BlankLineAfterAssignment cop.
