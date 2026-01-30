@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/ConsecutiveInstanceVariableAssignmentAlignment cop.
+- Add missing default configuration.
 
 ## 0.3.0 — January 22nd, 2026
 
