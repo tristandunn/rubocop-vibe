@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Vibe/AttrOrder cop.
+
 ## 0.4.0 — January 30th, 2026
 
 - Add Vibe/ConsecutiveInstanceVariableAssignmentAlignment cop.
