@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/AttrOrder cop.
+- Add Vibe/KeywordArgumentOrder cop.
 
 ## 0.4.0 — January 30th, 2026
 

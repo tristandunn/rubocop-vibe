@@ -134,6 +134,12 @@ Vibe/IsExpectedOneLiner:
   SafeAutoCorrect: true
   VersionAdded: "0.1.0"
 
+Vibe/KeywordArgumentOrder:
+  Description: "Enforces alphabetical ordering of keyword arguments and their YARD documentation."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.5.0"
+
 Vibe/LetOrder:
   Description: "Enforces alphabetical ordering of consecutive let declarations."
   Enabled: true
