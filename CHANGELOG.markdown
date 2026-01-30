@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — January 30th, 2026
 
 - Add Vibe/ConsecutiveInstanceVariableAssignmentAlignment cop.
 - Add missing default configuration.
