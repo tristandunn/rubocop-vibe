@@ -25,8 +25,8 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 4.0"
 
   s.add_dependency "lint_roller",         ">= 1.1.0"
-  s.add_dependency "rubocop",             ">= 1.82.1"
+  s.add_dependency "rubocop",             ">= 1.85.0"
   s.add_dependency "rubocop-performance", ">= 1.26.1"
   s.add_dependency "rubocop-rake",        ">= 0.7.1"
-  s.add_dependency "rubocop-rspec",       ">= 3.8.0"
+  s.add_dependency "rubocop-rspec",       ">= 3.9.0"
 end
