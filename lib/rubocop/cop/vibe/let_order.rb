@@ -49,6 +49,7 @@ module RuboCop
           check_lets_in_body(node.body)
         end
         alias on_numblock on_block
+        alias on_itblock on_block
 
         private
 
