@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/AttrOrder cop.
+- Add Vibe/ConsecutiveScopeAlignment cop.
 - Add Vibe/KeywordArgumentOrder cop.
 - Fix ExplicitReturnConditional and RaiseUnlessBlock compound unless handling.
 

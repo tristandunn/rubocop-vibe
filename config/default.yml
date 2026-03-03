@@ -116,6 +116,12 @@ Vibe/ConsecutiveLetAlignment:
   SafeAutoCorrect: true
   VersionAdded: "0.2.0"
 
+Vibe/ConsecutiveScopeAlignment:
+  Description: "Enforces alignment of consecutive scope declarations at the -> arrow."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.5.0"
+
 Vibe/DescribeBlockOrder:
   Description: "Enforces consistent ordering of describe blocks in RSpec files."
   Enabled: true
