@@ -151,12 +151,13 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The modifier if node.
         # @return [String]
         def build_if_block(node)
+          keyword      = node.unless? && node.condition.type?(:and, :or) ? "unless" : "if"
           condition    = build_condition(node)
           base_indent  = " " * node.loc.column
           inner_indent = "#{base_indent}  "
 
           [
-            "if #{condition}",
+            "#{keyword} #{condition}",
             "#{inner_indent}#{node.if_branch.source}",
             "#{base_indent}end"
           ].join("\n")
@@ -168,7 +169,7 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The if node.
         # @return [String] The condition source.
         def build_condition(node)
-          if node.unless?
+          if node.unless? && !node.condition.type?(:and, :or)
             negate_condition(node.condition)
           else
             node.condition.source

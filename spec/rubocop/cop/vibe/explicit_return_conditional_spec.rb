@@ -358,6 +358,37 @@ RSpec.describe RuboCop::Cop::Vibe::ExplicitReturnConditional, :config do
       end
     end
 
+    context "when trailing unless has a compound condition" do
+      let(:offense_code) do
+        <<~RUBY
+          def message
+            "Error" unless valid? && active?
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Use explicit `if`/`end` block instead of trailing conditional for return value.
+          end
+        RUBY
+      end
+
+      let(:corrected_code) do
+        <<~RUBY
+          def message
+            unless valid? && active?
+              "Error"
+            end
+          end
+        RUBY
+      end
+
+      it "registers an offense" do
+        expect_offense(offense_code)
+      end
+
+      it "autocorrects using unless block to preserve readability" do
+        expect_offense(offense_code)
+
+        expect_correction(corrected_code)
+      end
+    end
+
     context "when unless condition is already negated" do
       let(:offense_code) do
         <<~RUBY

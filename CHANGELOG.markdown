@@ -4,6 +4,7 @@
 
 - Add Vibe/AttrOrder cop.
 - Add Vibe/KeywordArgumentOrder cop.
+- Fix ExplicitReturnConditional and RaiseUnlessBlock compound unless handling.
 
 ## 0.4.0 — January 30th, 2026
 

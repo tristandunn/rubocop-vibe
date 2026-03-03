@@ -72,25 +72,28 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The if node.
         # @return [String] The replacement code.
         def build_replacement(node)
+          keyword      = node.unless? && node.condition.type?(:and, :or) ? "unless" : "if"
           condition    = build_condition(node)
           raise_source = node.body.source
           base_indent  = " " * node.loc.column
           inner_indent = "#{base_indent}  "
 
           [
-            "if #{condition}",
+            "#{keyword} #{condition}",
             "#{inner_indent}#{raise_source}",
             "#{base_indent}end"
           ].join("\n")
         end
 
-        # Build the condition for the if block.
-        # For unless, negate the condition. For if, keep it as is.
+        # Build the condition for the if/unless block.
+        # For unless with a compound condition, keep it as-is (paired with unless keyword).
+        # For unless with a simple condition, negate it.
+        # For if, keep as-is.
         #
         # @param [RuboCop::AST::Node] node The if node.
         # @return [String] The condition source.
         def build_condition(node)
-          if node.unless?
+          if node.unless? && !node.condition.type?(:and, :or)
             "!#{node.condition.source}"
           else
             node.condition.source

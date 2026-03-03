@@ -55,7 +55,22 @@ RSpec.describe RuboCop::Cop::Vibe::RaiseUnlessBlock, :config do
         RUBY
 
         expect_correction(<<~RUBY)
-          if !valid? && active? && enabled?
+          unless valid? && active? && enabled?
+            raise ArgumentError
+          end
+        RUBY
+      end
+    end
+
+    context "when using raise with unless modifier and or condition" do
+      it "registers an offense and autocorrects" do
+        expect_offense(<<~RUBY)
+          raise ArgumentError unless invalid? || disabled?
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Use `if/end` block instead of inline modifier for `raise`.
+        RUBY
+
+        expect_correction(<<~RUBY)
+          unless invalid? || disabled?
             raise ArgumentError
           end
         RUBY
