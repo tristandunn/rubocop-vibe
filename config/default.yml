@@ -215,6 +215,12 @@ Vibe/ServiceCallMethod:
   Enabled: true
   VersionAdded: "0.1.0"
 
+Vibe/ValidateAfterValidates:
+  Description: "Enforces that validate calls appear after validates declarations in Rails models."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.5.0"
+
 Vibe/ValidatesAlphaOrder:
   Description: "Enforces alphabetical ordering of consecutive validates declarations by attribute name."
   Enabled: true

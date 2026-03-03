@@ -3,36 +3,37 @@
 module RuboCop
   module Cop
     module Vibe
-      # Enforces alphabetical ordering of consecutive `validates` declarations.
+      # Enforces that `validate` calls appear after `validates` declarations.
       #
-      # Consecutive `validates` declarations (with no blank lines between) should be
-      # alphabetically ordered by the first attribute name for better readability and
-      # easier scanning. Groups are broken by blank lines or non-validates statements.
+      # Within a consecutive block of validates-family calls (no blank lines
+      # between), all `validate :method` calls must come after all `validates*`
+      # declarations. The order of `validate` calls relative to each other is
+      # not enforced.
       #
       # @example
       #   # bad
       #   class User < ApplicationRecord
+      #     validate :check_expiry
       #     validates :name, presence: true
-      #     validates :age, numericality: true
       #   end
       #
       #   # good
       #   class User < ApplicationRecord
-      #     validates :age, numericality: true
       #     validates :name, presence: true
+      #     validate :check_expiry
       #   end
       #
       #   # good - blank line breaks the group
       #   class User < ApplicationRecord
-      #     validates :z, presence: true
+      #     validate :check_expiry
       #
-      #     validates :a, presence: true
+      #     validates :name, presence: true
       #   end
-      class ValidatesAlphaOrder < Base
+      class ValidateAfterValidates < Base
         extend AutoCorrector
         include AlignmentHelpers
 
-        MSG = "Order validates declarations alphabetically by attribute name."
+        MSG = "Place `validate` calls after `validates` declarations."
 
         VALIDATES_METHODS = %i(
           validates validates_each validates_with
@@ -42,7 +43,9 @@ module RuboCop
           validates_size_of validates_uniqueness_of validates_associated
         ).freeze
 
-        # Check class nodes for validates ordering.
+        VALIDATE_METHOD = :validate
+
+        # Check class nodes for validate/validates ordering.
         #
         # @param [RuboCop::AST::Node] node The class node.
         # @return [void]
@@ -55,7 +58,7 @@ module RuboCop
 
         private
 
-        # Check validates declarations in a body node.
+        # Check validates-family declarations in a body node.
         #
         # @param [RuboCop::AST::Node] body The body node.
         # @return [void]
@@ -64,85 +67,71 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| validates_declaration?(s) }
+          groups = group_consecutive_statements(statements) { |s| validates_family?(s) }
 
           groups.each { |group| check_group_order(group) }
         end
 
-        # Check if a node is a validates declaration.
+        # Check if a node is a validates-family declaration.
         #
         # @param [RuboCop::AST::Node] node The node to check.
         # @return [Boolean]
-        def validates_declaration?(node)
+        def validates_family?(node)
           if node.send_type?
-            VALIDATES_METHODS.include?(node.method_name)
+            VALIDATES_METHODS.include?(node.method_name) || node.method?(VALIDATE_METHOD)
           else
             false
           end
         end
 
-        # Check ordering for a group of validates declarations.
+        # Check ordering for a group of validates-family declarations.
         #
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [void]
         def check_group_order(group)
-          return if alphabetically_ordered?(group)
+          violations = find_violations(group)
 
-          violations = find_ordering_violations(group)
+          return if violations.empty?
 
-          violations.each do |validates|
-            add_offense(validates) do |corrector|
+          violations.each do |validate|
+            add_offense(validate) do |corrector|
               autocorrect(corrector, group)
             end
           end
         end
 
-        # Check if validates declarations are alphabetically ordered.
+        # Find validate calls that appear before validates* declarations.
         #
         # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [Boolean]
-        def alphabetically_ordered?(group)
-          names = group.map { |v| extract_validates_name(v) }
+        # @return [Array<RuboCop::AST::Node>] Validate nodes that violate ordering.
+        def find_violations(group)
+          last_validates_index = group.rindex { |n| VALIDATES_METHODS.include?(n.method_name) }
 
-          names == names.sort
-        end
+          return [] if last_validates_index.nil?
 
-        # Extract the attribute name from a validates declaration.
-        #
-        # @param [RuboCop::AST::Node] node The validates node.
-        # @return [String]
-        def extract_validates_name(node)
-          node.first_argument.value.to_s
-        end
-
-        # Find validates declarations that violate ordering.
-        #
-        # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [Array<RuboCop::AST::Node>] Validates that violate ordering.
-        def find_ordering_violations(group)
-          violations = []
-
-          group.each_cons(2) do |current, following|
-            violations << following if extract_validates_name(current) > extract_validates_name(following)
+          group.each_with_index.filter_map do |node, index|
+            node if index < last_validates_index && node.method?(VALIDATE_METHOD)
           end
-
-          violations.uniq
         end
 
-        # Auto-correct by reordering validates declarations.
+        # Auto-correct by moving validate calls after validates* declarations.
+        #
+        # Preserves relative order within each tier.
         #
         # @param [RuboCop::AST::Corrector] corrector The corrector.
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [void]
         def autocorrect(corrector, group)
-          sorted = group.sort_by { |v| extract_validates_name(v) }
+          validates_nodes = group.select { |n| VALIDATES_METHODS.include?(n.method_name) }
+          validate_nodes  = group.select { |n| n.method?(VALIDATE_METHOD) }
+          sorted          = validates_nodes + validate_nodes
 
-          group.each_with_index do |validates, index|
-            sorted_validates = sorted[index]
+          group.each_with_index do |node, index|
+            sorted_node = sorted[index]
 
-            next if validates == sorted_validates
+            next if node == sorted_node
 
-            corrector.replace(validates, sorted_validates.source)
+            corrector.replace(node, sorted_node.source)
           end
         end
 

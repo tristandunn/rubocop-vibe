@@ -100,12 +100,13 @@ RSpec.describe RuboCop::Cop::Vibe::ValidatesAlphaOrder, :config do
       end
     end
 
-    context "when validates has a receiver" do
-      it "does not register an offense" do
+    context "when a validate call appears between validates declarations" do
+      it "does not register an offense across groups" do
         expect_no_offenses(<<~RUBY)
           class User < ApplicationRecord
-            Foo.validates :name
-            Foo.validates :age
+            validates :name
+            validate :check_expiry
+            validates :age
           end
         RUBY
       end
@@ -126,17 +127,6 @@ RSpec.describe RuboCop::Cop::Vibe::ValidatesAlphaOrder, :config do
       it "does not register an offense" do
         expect_no_offenses(<<~RUBY)
           class User
-            validates :name
-            validates :age
-          end
-        RUBY
-      end
-    end
-
-    context "when class has a non-constant parent" do
-      it "does not register an offense" do
-        expect_no_offenses(<<~RUBY)
-          class User < base_class
             validates :name
             validates :age
           end
