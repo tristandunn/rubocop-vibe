@@ -214,3 +214,9 @@ Vibe/ServiceCallMethod:
   Description: "Service objects should define `self.call` and `call` methods."
   Enabled: true
   VersionAdded: "0.1.0"
+
+Vibe/ValidatesAlphaOrder:
+  Description: "Enforces alphabetical ordering of consecutive validates declarations by attribute name."
+  Enabled: true
+  SafeAutoCorrect: true
+  VersionAdded: "0.5.0"
