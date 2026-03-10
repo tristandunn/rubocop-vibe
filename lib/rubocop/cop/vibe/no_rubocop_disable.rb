@@ -40,9 +40,9 @@ module RuboCop
         MSG        = "Do not disable `%<cops>s`. Fix the issue or configure globally in `.rubocop.yml`."
         MSG_NO_COP = "Do not use `# rubocop:disable`. Fix the issue or configure globally in `.rubocop.yml`."
 
-        DISABLE_PATTERN  = /\A#\s*rubocop\s*:\s*disable\b/i
-        COP_NAME_PATTERN = %r{[A-Za-z]+/[A-Za-z0-9]+}
         ALL_PATTERN      = /\brubocop\s*:\s*disable\s+all\b/i
+        COP_NAME_PATTERN = %r{[A-Za-z]+/[A-Za-z0-9]+}
+        DISABLE_PATTERN  = /\A#\s*rubocop\s*:\s*disable\b/i
 
         # Check for rubocop:disable comments.
         #

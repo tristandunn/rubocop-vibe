@@ -47,8 +47,8 @@ module RuboCop
       class ExplicitReturnConditional < Base
         extend AutoCorrector
 
-        MSG_TERNARY  = "Use explicit `if`/`else`/`end` block instead of ternary operator for return value."
         MSG_MODIFIER = "Use explicit `if`/`end` block instead of trailing conditional for return value."
+        MSG_TERNARY  = "Use explicit `if`/`else`/`end` block instead of ternary operator for return value."
 
         # Check method definitions for conditional return values.
         #

@@ -36,20 +36,13 @@ module RuboCop
       class ClassOrganization < Base
         extend AutoCorrector
 
+        CLASS_MSG = "Class elements should be ordered: includes → constants → initialize → " \
+                    "class methods → instance methods → protected → private."
         MODEL_MSG = "Model elements should be ordered: concerns → constants → associations → " \
                     "validations → callbacks → scopes → class methods → instance methods → " \
                     "protected → private."
-        CLASS_MSG = "Class elements should be ordered: includes → constants → initialize → " \
-                    "class methods → instance methods → protected → private."
 
         ASSOCIATIONS = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
-        VALIDATIONS = %i(
-          validates validate validates_each validates_with
-          validates_absence_of validates_acceptance_of validates_confirmation_of
-          validates_exclusion_of validates_format_of validates_inclusion_of
-          validates_length_of validates_numericality_of validates_presence_of
-          validates_size_of validates_uniqueness_of validates_associated
-        ).freeze
         CALLBACKS = %i(
           before_validation after_validation
           before_save after_save around_save
@@ -59,6 +52,15 @@ module RuboCop
           after_commit after_rollback
           after_initialize after_find after_touch
         ).freeze
+        CLASS_PRIORITIES = {
+          concerns:          10,
+          constants:         20,
+          initialize:        30,
+          class_methods:     40,
+          instance_methods:  50,
+          protected_methods: 60,
+          private_methods:   70
+        }.freeze
         MODEL_PRIORITIES = {
           concerns:          10,
           constants:         20,
@@ -71,15 +73,13 @@ module RuboCop
           protected_methods: 90,
           private_methods:   100
         }.freeze
-        CLASS_PRIORITIES = {
-          concerns:          10,
-          constants:         20,
-          initialize:        30,
-          class_methods:     40,
-          instance_methods:  50,
-          protected_methods: 60,
-          private_methods:   70
-        }.freeze
+        VALIDATIONS = %i(
+          validates validate validates_each validates_with
+          validates_absence_of validates_acceptance_of validates_confirmation_of
+          validates_exclusion_of validates_format_of validates_inclusion_of
+          validates_length_of validates_numericality_of validates_presence_of
+          validates_size_of validates_uniqueness_of validates_associated
+        ).freeze
         VISIBILITY_CATEGORIES = {
           protected: :protected_methods,
           private:   :private_methods,

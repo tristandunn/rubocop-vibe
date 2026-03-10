@@ -38,12 +38,12 @@ module RuboCop
       class NoSkippedTests < Base
         include SpecFileHelper
 
-        MSG_SKIP    = "Do not skip tests. Implement or delete the test."
         MSG_PENDING = "Do not mark tests as pending. Implement or delete the test."
+        MSG_SKIP    = "Do not skip tests. Implement or delete the test."
         MSG_XMETHOD = "Do not use `%<method>s`. Implement or delete the test."
 
-        SKIP_METHODS    = %i(skip).freeze
         PENDING_METHODS = %i(pending).freeze
+        SKIP_METHODS    = %i(skip).freeze
         X_METHODS       = %i(xit xspecify xexample xscenario xdescribe xcontext xfeature).freeze
 
         # @!method skip_call?(node)

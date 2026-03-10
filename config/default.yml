@@ -122,6 +122,12 @@ Vibe/ConsecutiveScopeAlignment:
   SafeAutoCorrect: true
   VersionAdded: "0.5.0"
 
+Vibe/ConstantAlphaOrder:
+  Description: "Enforces alphabetical ordering of consecutive constant declarations by name."
+  Enabled: true
+  SafeAutoCorrect: false
+  VersionAdded: "0.5.0"
+
 Vibe/DescribeBlockOrder:
   Description: "Enforces consistent ordering of describe blocks in RSpec files."
   Enabled: true
