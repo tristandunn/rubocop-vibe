@@ -128,7 +128,6 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
         expect_correction(<<~RUBY)
           class User < ApplicationRecord
             scope :active, -> { where(active: true) }
-
             scope :inactive, -> { where(active: false) }
           end
         RUBY

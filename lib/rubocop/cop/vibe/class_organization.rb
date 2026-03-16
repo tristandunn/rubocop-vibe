@@ -36,12 +36,6 @@ module RuboCop
       class ClassOrganization < Base
         extend AutoCorrector
 
-        CLASS_MSG = "Class elements should be ordered: includes → constants → initialize → " \
-                    "class methods → instance methods → protected → private."
-        MODEL_MSG = "Model elements should be ordered: concerns → constants → associations → " \
-                    "validations → callbacks → scopes → class methods → instance methods → " \
-                    "protected → private."
-
         ASSOCIATIONS = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
         CALLBACKS = %i(
           before_validation after_validation
@@ -52,6 +46,8 @@ module RuboCop
           after_commit after_rollback
           after_initialize after_find after_touch
         ).freeze
+        CLASS_MSG = "Class elements should be ordered: includes → constants → initialize → " \
+                    "class methods → instance methods → protected → private."
         CLASS_PRIORITIES = {
           concerns:          10,
           constants:         20,
@@ -61,6 +57,10 @@ module RuboCop
           protected_methods: 60,
           private_methods:   70
         }.freeze
+        MACRO_CATEGORIES = %i(concerns constants associations validations callbacks scopes).freeze
+        MODEL_MSG = "Model elements should be ordered: concerns → constants → associations → " \
+                    "validations → callbacks → scopes → class methods → instance methods → " \
+                    "protected → private."
         MODEL_PRIORITIES = {
           concerns:          10,
           constants:         20,
@@ -586,7 +586,7 @@ module RuboCop
           add_visibility_modifier(state, element[:visibility])
           state[:visibility] = element[:visibility]
 
-          add_category_separator(state[:parts], element[:category], state[:category])
+          add_element_separator(state, element)
           state[:category] = element[:category]
 
           rendered_source = render_source(element[:source], state[:column])
@@ -608,18 +608,23 @@ module RuboCop
           state[:parts] << "#{indent}#{new_visibility}\n"
         end
 
-        # Add blank line between elements.
+        # Add blank line between elements when needed.
         #
-        # Adds a blank line before elements (except the first one) to maintain
-        # readable spacing between class members.
+        # Adds a blank line between different categories, and between method
+        # definitions within the same category. Consecutive macro calls
+        # (associations, validations, etc.) in the same category are kept
+        # together without blank lines.
         #
-        # @param [Array<String>] parts The parts array.
-        # @param [Symbol] _category The current category (unused but kept for API).
-        # @param [Symbol] last_category The last category.
+        # @param [Hash] state The state hash.
+        # @param [Hash] element The current element.
         # @return [void]
-        def add_category_separator(parts, _category, last_category)
-          if last_category
-            parts << "\n"
+        def add_element_separator(state, element)
+          if state[:category]
+            same_macro_category = element[:category] == state[:category] &&
+                                  MACRO_CATEGORIES.include?(element[:category])
+            unless same_macro_category
+              state[:parts] << "\n"
+            end
           end
         end
       end

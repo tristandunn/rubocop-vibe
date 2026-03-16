@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix ClassOrganization adding blank lines between consecutive macros.
+
 ## 0.5.0 — March 9th, 2026
 
 - Add Vibe/AttrOrder cop.
