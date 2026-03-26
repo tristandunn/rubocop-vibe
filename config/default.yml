@@ -133,6 +133,7 @@ Vibe/DescribeBlockOrder:
   Enabled: true
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
+  VersionChanged: "0.6.0"
 
 Vibe/ExplicitReturnConditional:
   Description: "Enforces explicit if/else/end blocks instead of ternary or trailing conditionals for return values."

@@ -440,5 +440,73 @@ RSpec.describe RuboCop::Cop::Vibe::DescribeBlockOrder, :config do
         RUBY
       end
     end
+
+    context "when non-controller spec has methods named like controller actions" do
+      it "treats them as regular instance methods" do
+        expect_no_offenses(<<~RUBY, "spec/forms/transaction_form_spec.rb")
+          RSpec.describe TransactionForm do
+            describe ".from" do
+            end
+
+            describe "#amount" do
+            end
+
+            describe "#date" do
+            end
+
+            describe "#save" do
+            end
+
+            describe "#transaction" do
+            end
+
+            describe "#update" do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when controller spec has action-named methods not in controller path" do
+      it "treats them as regular instance methods in non-controller paths" do
+        expect_no_offenses(<<~RUBY, "spec/services/updater_spec.rb")
+          RSpec.describe Updater do
+            describe "#update" do
+            end
+
+            describe "#validate" do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when controller spec has non-action method descriptions" do
+      it "treats non-action methods as regular instance methods" do
+        expect_no_offenses(<<~RUBY, "spec/controllers/users_controller_spec.rb")
+          RSpec.describe UsersController do
+            describe "#index" do
+            end
+
+            describe "#custom_action" do
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when controller spec uses action names without # prefix" do
+      it "recognizes unprefixed action names" do
+        expect_no_offenses(<<~RUBY, "spec/controllers/users_controller_spec.rb")
+          RSpec.describe UsersController do
+            describe "index" do
+            end
+
+            describe "show" do
+            end
+          end
+        RUBY
+      end
+    end
   end
 end

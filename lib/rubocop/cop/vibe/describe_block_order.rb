@@ -180,7 +180,7 @@ module RuboCop
         def categorize_description(description)
           if description
             special_section_priority(description) ||
-              controller_action_priority(description) ||
+              (controller_spec? && controller_action_priority(description)) ||
               method_priority(description) ||
               NON_SPECIAL_DESCRIPTION_PRIORITY
           else
@@ -209,6 +209,13 @@ module RuboCop
           if controller_action?(action_name)
             30 + CONTROLLER_ACTIONS.index(action_name)
           end
+        end
+
+        # Check if file is a controller spec.
+        #
+        # @return [Boolean]
+        def controller_spec?
+          processed_source.file_path.include?("spec/controllers/")
         end
 
         # Get priority for method descriptions.
