@@ -292,7 +292,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
     end
 
     context "when private method comes before public method" do
-      it "registers an offense and corrects with proper visibility" do
+      it "registers an offense but does not autocorrect across visibility boundaries" do
         expect_offense(<<~RUBY)
           class User < ApplicationRecord
             private
@@ -310,79 +310,29 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
           end
         RUBY
 
-        expect_correction(<<~RUBY)
-          class User < ApplicationRecord
-            def admin?
-              role == "admin"
-            end
-
-            private
-
-            def normalize_email
-              self.email = email.downcase
-            end
-          end
-        RUBY
+        expect_no_corrections
       end
     end
 
-    context "when multiple methods need reordering across visibility levels" do
-      it "corrects all methods with proper visibility grouping" do
+    context "when cross-category elements are in same visibility section" do
+      it "corrects ordering within the visibility section" do
         expect_offense(<<~RUBY)
           class User < ApplicationRecord
-            private
-
-            def normalize_email
-              self.email = email.downcase
-            end
-
-            def send_notification
-              notify!
-            end
-
-            protected
-
-            def can_edit?
-            ^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
-              true
-            end
-
-            public
-
             def admin?
               role == "admin"
             end
 
-            def active?
-              status == "active"
-            end
+            has_many :posts
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
 
         expect_correction(<<~RUBY)
           class User < ApplicationRecord
-            def active?
-              status == "active"
-            end
+            has_many :posts
 
             def admin?
               role == "admin"
-            end
-
-            protected
-
-            def can_edit?
-              true
-            end
-
-            private
-
-            def normalize_email
-              self.email = email.downcase
-            end
-
-            def send_notification
-              notify!
             end
           end
         RUBY
@@ -829,6 +779,34 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             scope
 
             scope
+          end
+        RUBY
+      end
+    end
+
+    context "when non-model class has non-include send node" do
+      it "ignores the send node" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+            delegate :name, to: :user
+
+            def call
+              true
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when model has unrecognized send node" do
+      it "ignores the send node" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            has_many :posts
+
+            enum :status, { active: 0, inactive: 1 }
+
+            validates :name, presence: true
           end
         RUBY
       end

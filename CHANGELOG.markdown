@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fix ClassOrganization adding blank lines between consecutive macros.
+- Fix ClassOrganization autocorrect dropping uncategorizable nodes.
 - Fix DescribeBlockOrder sorting controller action names outside of controllers.
 
 ## 0.5.0 — March 9th, 2026
