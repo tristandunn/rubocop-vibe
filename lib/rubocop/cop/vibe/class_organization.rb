@@ -420,15 +420,13 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The node.
         # @return [String]
         def sort_key_for(category, node)
-          return "" unless %i(scopes class_methods instance_methods).include?(category)
+          sortable = %i(scopes class_methods instance_methods protected_methods private_methods)
 
-          if category == :scopes
-            scope_sort_key(node)
-          elsif category == :class_methods && node.method?(:call)
-            "!" # Ensures call is first among class methods
-          else
-            node.method_name.to_s
-          end
+          return "" unless sortable.include?(category)
+          return scope_sort_key(node) if category == :scopes
+          return "!" if category == :class_methods && node.method?(:call)
+
+          node.method_name.to_s
         end
 
         # Get the source of a node including preceding comments.

@@ -359,6 +359,107 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
       end
     end
 
+    context "when private methods are not alphabetically sorted" do
+      it "registers an offense and autocorrects" do
+        expect_offense(<<~RUBY)
+          class Service
+            private
+
+            def zebra
+              "z"
+            end
+
+            def alpha
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            private
+
+            def alpha
+              "a"
+            end
+
+            def zebra
+              "z"
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when protected methods are not alphabetically sorted" do
+      it "registers an offense" do
+        expect_offense(<<~RUBY)
+          class Service
+            protected
+
+            def zebra
+              "z"
+            end
+
+            def alpha
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when only private methods are out of order but public are correct" do
+      it "only reorders the private section" do
+        expect_offense(<<~RUBY)
+          class Service
+            def alpha
+              "a"
+            end
+
+            def beta
+              "b"
+            end
+
+            private
+
+            def zebra
+              "z"
+            end
+
+            def apple
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            def alpha
+              "a"
+            end
+
+            def beta
+              "b"
+            end
+
+            private
+
+            def apple
+              "a"
+            end
+
+            def zebra
+              "z"
+            end
+          end
+        RUBY
+      end
+    end
+
     context "when constant comes after association" do
       it "registers an offense" do
         expect_offense(<<~RUBY)
