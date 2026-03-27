@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add alphabetical ordering for private and protected methods to ClassOrganization.
+- Add attr_accessor, attr_reader, and attr_writer support to ClassOrganization.
 - Fix ClassOrganization adding blank lines between consecutive macros.
 - Fix ClassOrganization autocorrect dropping uncategorizable nodes.
 - Fix DescribeBlockOrder sorting controller action names outside of controllers.

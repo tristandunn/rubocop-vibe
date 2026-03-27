@@ -68,7 +68,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -81,7 +81,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             validates :name, presence: true
 
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -94,7 +94,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             scope :active, -> { where(active: true) }
 
             validates :name, presence: true
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -109,7 +109,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             scope :active, -> { where(active: true) }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -121,7 +121,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
           class User < ApplicationRecord
             scope :inactive, -> { where(active: false) }
             scope :active, -> { where(active: true) }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
 
@@ -143,7 +143,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def self.find_active
-            ^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               active
             end
           end
@@ -160,7 +160,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def self.call
-            ^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               new.process
             end
           end
@@ -189,7 +189,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def admin?
-            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               role == "admin"
             end
           end
@@ -220,7 +220,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def initialize
-            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               @value = 1
             end
           end
@@ -265,7 +265,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             public
 
             def initialize
-            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               @value = 1
             end
 
@@ -304,7 +304,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             public
 
             def admin?
-            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
               role == "admin"
             end
           end
@@ -314,25 +314,84 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
       end
     end
 
-    context "when cross-category elements are in same visibility section" do
-      it "corrects ordering within the visibility section" do
+    context "when multiple methods need reordering across visibility levels" do
+      it "registers an offense" do
         expect_offense(<<~RUBY)
           class User < ApplicationRecord
+            private
+
+            def normalize_email
+              self.email = email.downcase
+            end
+
+            def send_notification
+              notify!
+            end
+
+            protected
+
+            def can_edit?
+            ^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+              true
+            end
+
+            public
+
             def admin?
               role == "admin"
             end
 
-            has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            def active?
+              status == "active"
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when only private methods are out of order but public are correct" do
+      it "only reorders the private section" do
+        expect_offense(<<~RUBY)
+          class Service
+            def alpha
+              "a"
+            end
+
+            def beta
+              "b"
+            end
+
+            private
+
+            def zebra
+              "z"
+            end
+
+            def apple
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
           end
         RUBY
 
         expect_correction(<<~RUBY)
-          class User < ApplicationRecord
-            has_many :posts
+          class Service
+            def alpha
+              "a"
+            end
 
-            def admin?
-              role == "admin"
+            def beta
+              "b"
+            end
+
+            private
+
+            def apple
+              "a"
+            end
+
+            def zebra
+              "z"
             end
           end
         RUBY
@@ -360,7 +419,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
     end
 
     context "when private methods are not alphabetically sorted" do
-      it "registers an offense and autocorrects" do
+      it "registers an offense" do
         expect_offense(<<~RUBY)
           class Service
             private
@@ -370,7 +429,24 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def alpha
-            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+      end
+
+      it "autocorrects private methods into alphabetical order" do
+        expect_offense(<<~RUBY)
+          class Service
+            private
+
+            def zebra
+              "z"
+            end
+
+            def alpha
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               "a"
             end
           end
@@ -403,7 +479,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def alpha
-            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               "a"
             end
           end
@@ -411,49 +487,93 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
       end
     end
 
-    context "when only private methods are out of order but public are correct" do
-      it "only reorders the private section" do
+    context "when attr methods are present" do
+      it "places attr_accessor before attr_reader before attr_writer in private" do
         expect_offense(<<~RUBY)
           class Service
-            def alpha
-              "a"
-            end
-
-            def beta
-              "b"
-            end
-
             private
 
-            def zebra
-              "z"
-            end
-
-            def apple
-            ^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
-              "a"
-            end
+            attr_writer :c
+            attr_reader :b
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+            attr_accessor :a
           end
         RUBY
 
         expect_correction(<<~RUBY)
           class Service
-            def alpha
-              "a"
-            end
-
-            def beta
-              "b"
-            end
-
             private
 
-            def apple
-              "a"
+            attr_accessor :a
+            attr_reader :b
+            attr_writer :c
+          end
+        RUBY
+      end
+
+      it "places attr methods before regular methods" do
+        expect_offense(<<~RUBY)
+          class Service
+            private
+
+            def helper
+              "help"
             end
 
+            attr_reader :value
+            ^^^^^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            private
+
+            attr_reader :value
+
+            def helper
+              "help"
+            end
+          end
+        RUBY
+      end
+
+      it "registers an offense when attr methods come after instance methods" do
+        expect_offense(<<~RUBY)
+          class Service
             def zebra
               "z"
+            end
+
+            attr_reader :alpha
+            ^^^^^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+          end
+        RUBY
+      end
+
+      it "does not register an offense when attr methods come before initialize" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+            attr_reader :name
+
+            def initialize(name)
+              @name = name
+            end
+          end
+        RUBY
+      end
+
+      it "does not register an offense when attr methods are correctly ordered" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+            private
+
+            attr_accessor :a
+            attr_reader :b
+            attr_writer :c
+
+            def helper
+              "help"
             end
           end
         RUBY
@@ -467,7 +587,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             has_many :posts
 
             MINIMUM_AGE = 18
-            ^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -480,7 +600,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             MINIMUM_AGE = 18
 
             include Authenticatable
-            ^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -493,7 +613,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             before_save :normalize_email
 
             validates :email, presence: true
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -582,7 +702,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
 
             # All the posts
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
 
@@ -630,7 +750,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
                 #
                 # @return [LintRoller::Rules] The rules for this plug-in.
                 def rules(_context)
-                ^^^^^^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+                ^^^^^^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
                   LintRoller::Rules.new(
                     type:          :path,
                     config_format: :rubocop,
@@ -716,7 +836,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             def initialize
-            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               @value = 1
             end
           end
@@ -735,6 +855,117 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             validates :name, presence: true
+          end
+        RUBY
+      end
+
+      it "skips full autocorrect when alias is present with cross-category violations" do
+        expect_offense(<<~RUBY)
+          class Service
+            alias bar foo
+
+            private
+
+            def helper
+              "help"
+            end
+
+            public
+
+            def initialize
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+              @value = 1
+            end
+          end
+        RUBY
+
+        expect_no_corrections
+      end
+
+      it "autocorrects when alias is present without disturbing it" do
+        expect_offense(<<~RUBY)
+          class Service
+            alias bar foo
+
+            def zebra
+              "z"
+            end
+
+            def alpha
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            alias bar foo
+
+            def alpha
+              "a"
+            end
+
+            def zebra
+              "z"
+            end
+          end
+        RUBY
+      end
+
+      it "autocorrects when class-level macros are present without disturbing them" do
+        expect_offense(<<~RUBY)
+          class Service
+            delegate :name, to: :user
+
+            def zebra
+              "z"
+            end
+
+            def alpha
+            ^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
+              "a"
+            end
+          end
+        RUBY
+
+        expect_correction(<<~RUBY)
+          class Service
+            delegate :name, to: :user
+
+            def alpha
+              "a"
+            end
+
+            def zebra
+              "z"
+            end
+          end
+        RUBY
+      end
+    end
+
+    context "when model has unrecognized macro calls" do
+      it "does not register an offense for unrecognized model macros" do
+        expect_no_offenses(<<~RUBY)
+          class User < ApplicationRecord
+            has_many :posts
+
+            enum :status, { active: 0, inactive: 1 }
+          end
+        RUBY
+      end
+    end
+
+    context "when non-model has unrecognized send nodes" do
+      it "ignores unrecognized sends" do
+        expect_no_offenses(<<~RUBY)
+          class Service
+            delegate :name, to: :user
+
+            def call
+              "hello"
+            end
           end
         RUBY
       end
@@ -780,7 +1011,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -795,7 +1026,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             end
 
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
       end
@@ -814,7 +1045,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             protected
 
             def aaa_method
-            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → initialize → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^ Class elements should be ordered: includes → constants → attr → initialize → class methods → instance methods → protected → private.
               "aaa"
             end
           end
@@ -829,7 +1060,7 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             scope -> { where(active: true) }
 
             has_many :posts
-            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
+            ^^^^^^^^^^^^^^^ Model elements should be ordered: concerns → constants → attr → associations → validations → callbacks → scopes → class methods → instance methods → protected → private.
           end
         RUBY
 
@@ -880,34 +1111,6 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
             scope
 
             scope
-          end
-        RUBY
-      end
-    end
-
-    context "when non-model class has non-include send node" do
-      it "ignores the send node" do
-        expect_no_offenses(<<~RUBY)
-          class Service
-            delegate :name, to: :user
-
-            def call
-              true
-            end
-          end
-        RUBY
-      end
-    end
-
-    context "when model has unrecognized send node" do
-      it "ignores the send node" do
-        expect_no_offenses(<<~RUBY)
-          class User < ApplicationRecord
-            has_many :posts
-
-            enum :status, { active: 0, inactive: 1 }
-
-            validates :name, presence: true
           end
         RUBY
       end

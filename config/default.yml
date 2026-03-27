@@ -85,6 +85,7 @@ Vibe/ClassOrganization:
   Enabled: true
   SafeAutoCorrect: false
   VersionAdded: "0.1.0"
+  VersionChanged: "0.6.0"
 
 Vibe/ConsecutiveAssignmentAlignment:
   Description: "Enforces alignment of consecutive variable assignments at the = operator."

@@ -5,11 +5,15 @@ module RuboCop
     module Vibe
       # Enforces consistent organization of class definitions.
       #
-      # For Rails models, enforces: concerns → constants → associations → validations →
-      # callbacks → scopes → class methods → instance methods → protected → private.
+      # For Rails models, enforces: concerns → constants → attr → associations →
+      # validations → callbacks → scopes → class methods → instance methods →
+      # protected → private.
       #
-      # For regular classes, enforces: includes → constants → initialize → class methods →
-      # instance methods → protected → private.
+      # For regular classes, enforces: includes → constants → attr → initialize →
+      # class methods → instance methods → protected → private.
+      #
+      # Within each visibility level, attr_accessor/attr_reader/attr_writer are ordered
+      # first (in that order), followed by methods in alphabetical order.
       #
       # @example
       #   # bad
@@ -36,7 +40,8 @@ module RuboCop
       class ClassOrganization < Base
         extend AutoCorrector
 
-        ASSOCIATIONS = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
+        ASSOCIATIONS    = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
+        ATTR_SORT_ORDER = { attr_accessor: "!0", attr_reader: "!1", attr_writer: "!2" }.freeze
         CALLBACKS = %i(
           before_validation after_validation
           before_save after_save around_save
@@ -46,23 +51,25 @@ module RuboCop
           after_commit after_rollback
           after_initialize after_find after_touch
         ).freeze
-        CLASS_MSG = "Class elements should be ordered: includes → constants → initialize → " \
+        CLASS_MSG = "Class elements should be ordered: includes → constants → attr → initialize → " \
                     "class methods → instance methods → protected → private."
         CLASS_PRIORITIES = {
           concerns:          10,
           constants:         20,
+          attr_methods:      25,
           initialize:        30,
           class_methods:     40,
           instance_methods:  50,
           protected_methods: 60,
           private_methods:   70
         }.freeze
-        MODEL_MSG = "Model elements should be ordered: concerns → constants → associations → " \
+        MODEL_MSG = "Model elements should be ordered: concerns → constants → attr → associations → " \
                     "validations → callbacks → scopes → class methods → instance methods → " \
                     "protected → private."
         MODEL_PRIORITIES = {
           concerns:          10,
           constants:         20,
+          attr_methods:      25,
           associations:      30,
           validations:       40,
           callbacks:         50,
@@ -122,6 +129,26 @@ module RuboCop
 
         private
 
+        # Get category for attr methods based on visibility.
+        #
+        # @param [Symbol] visibility The current visibility.
+        # @return [Symbol]
+        def attr_category(visibility)
+          if visibility == :public
+            :attr_methods
+          else
+            visibility_method_category(visibility)
+          end
+        end
+
+        # Check if node is an attr method.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def attr_method?(node)
+          node.send_type? && ATTR_SORT_ORDER.key?(node.method_name)
+        end
+
         # Auto-correct by sorting elements within each visibility section.
         #
         # @param [RuboCop::AST::Corrector] corrector The corrector.
@@ -138,7 +165,7 @@ module RuboCop
           end
         end
 
-        # Auto-correct a single group of elements.
+        # Auto-correct a single consecutive group.
         #
         # @param [RuboCop::AST::Corrector] corrector The corrector.
         # @param [Array<Hash>] group The original elements.
@@ -199,8 +226,9 @@ module RuboCop
           return :constants if node.casgn_type?
 
           return nil if visibility_modifier?(node)
+          return attr_category(visibility) if attr_method?(node)
 
-          send_category(node, is_model)
+          send_category(node, visibility, is_model)
         end
 
         # Collect elements from body nodes.
@@ -391,10 +419,11 @@ module RuboCop
         # Categorize send nodes.
         #
         # @param [RuboCop::AST::Node] node The node to categorize.
+        # @param [Symbol] _visibility The current visibility.
         # @param [Boolean] is_model Whether this is a Rails model.
         # @return [Symbol]
         # @return [nil]
-        def send_category(node, is_model)
+        def send_category(node, _visibility, is_model)
           return :concerns if node.method?(:include)
           return nil unless is_model
 
@@ -423,6 +452,7 @@ module RuboCop
           sortable = %i(scopes class_methods instance_methods protected_methods private_methods)
 
           return "" unless sortable.include?(category)
+          return ATTR_SORT_ORDER[node.method_name] if attr_method?(node)
           return scope_sort_key(node) if category == :scopes
           return "!" if category == :class_methods && node.method?(:call)
 
