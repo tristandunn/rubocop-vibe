@@ -52,26 +52,36 @@ module RuboCop
 
         private
 
-        # Check indexed assignments in a body node.
+        # Auto-correct the alignment of an indexed assignment.
         #
-        # @param [RuboCop::AST::Node] body The body node.
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] asgn The indexed assignment node.
+        # @param [Integer] target_column The target column for alignment.
         # @return [void]
-        def check_indexed_assignments_in_body(body)
-          statements = extract_statements(body)
+        def autocorrect_alignment(corrector, asgn, target_column)
+          bracket_end    = closing_bracket_end_pos(asgn)
+          operator_start = asgn.loc.operator.begin_pos
+          total_spaces   = calculate_total_spaces(asgn, target_column, bracket_end, operator_start)
 
-          return if statements.size < 2
-
-          groups = group_consecutive_statements(statements) { |s| indexed_assignment?(s) }
-
-          groups.each { |group| check_group_alignment(group) }
+          corrector.replace(
+            range_between(bracket_end, operator_start),
+            " " * total_spaces
+          )
         end
 
-        # Check if a node is an indexed assignment.
+        # Calculate total spaces needed for alignment.
         #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def indexed_assignment?(node)
-          node.send_type? && node.method?(:[]=)
+        # @param [RuboCop::AST::Node] asgn The indexed assignment node.
+        # @param [Integer] target_column The target column for alignment.
+        # @param [Integer] bracket_end Position after the closing bracket.
+        # @param [Integer] operator_start Position of the operator.
+        # @return [Integer] The number of spaces (minimum 1).
+        def calculate_total_spaces(asgn, target_column, bracket_end, operator_start)
+          current_column = asgn.loc.operator.column
+          current_spaces = operator_start - bracket_end
+          spaces_needed  = target_column - current_column
+
+          [1, current_spaces + spaces_needed].max
         end
 
         # Check alignment for a group of indexed assignments.
@@ -93,29 +103,18 @@ module RuboCop
           end
         end
 
-        # Get the location to highlight for the offense.
+        # Check indexed assignments in a body node.
         #
-        # @param [RuboCop::AST::Node] asgn The indexed assignment node.
-        # @return [Parser::Source::Range]
-        def offense_location(asgn)
-          asgn.loc.selector
-        end
-
-        # Auto-correct the alignment of an indexed assignment.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] asgn The indexed assignment node.
-        # @param [Integer] target_column The target column for alignment.
+        # @param [RuboCop::AST::Node] body The body node.
         # @return [void]
-        def autocorrect_alignment(corrector, asgn, target_column)
-          bracket_end    = closing_bracket_end_pos(asgn)
-          operator_start = asgn.loc.operator.begin_pos
-          total_spaces   = calculate_total_spaces(asgn, target_column, bracket_end, operator_start)
+        def check_indexed_assignments_in_body(body)
+          statements = extract_statements(body)
 
-          corrector.replace(
-            range_between(bracket_end, operator_start),
-            " " * total_spaces
-          )
+          return if statements.size < 2
+
+          groups = group_consecutive_statements(statements) { |s| indexed_assignment?(s) }
+
+          groups.each { |group| check_group_alignment(group) }
         end
 
         # Get the position after the closing bracket.
@@ -126,19 +125,20 @@ module RuboCop
           asgn.first_argument.source_range.end_pos + 1
         end
 
-        # Calculate total spaces needed for alignment.
+        # Check if a node is an indexed assignment.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def indexed_assignment?(node)
+          node.send_type? && node.method?(:[]=)
+        end
+
+        # Get the location to highlight for the offense.
         #
         # @param [RuboCop::AST::Node] asgn The indexed assignment node.
-        # @param [Integer] target_column The target column for alignment.
-        # @param [Integer] bracket_end Position after the closing bracket.
-        # @param [Integer] operator_start Position of the operator.
-        # @return [Integer] The number of spaces (minimum 1).
-        def calculate_total_spaces(asgn, target_column, bracket_end, operator_start)
-          current_column = asgn.loc.operator.column
-          current_spaces = operator_start - bracket_end
-          spaces_needed  = target_column - current_column
-
-          [1, current_spaces + spaces_needed].max
+        # @return [Parser::Source::Range]
+        def offense_location(asgn)
+          asgn.loc.selector
         end
       end
     end

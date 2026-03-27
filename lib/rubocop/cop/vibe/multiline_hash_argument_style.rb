@@ -54,12 +54,40 @@ module RuboCop
 
         private
 
-        # Check if this is a multiline call with closing paren on own line.
+        # Autocorrect by reordering and splitting pairs.
         #
-        # @param [RuboCop::AST::Node] node The send node.
-        # @return [Boolean]
-        def multiline_call_with_hash?(node)
-          node.parenthesized? && closing_paren_on_own_line?(node)
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] hash_arg The hash node.
+        # @return [void]
+        def autocorrect(corrector, hash_arg)
+          pairs       = hash_arg.pairs
+          sorted      = pairs.sort_by { |pair| extract_key_name(pair) }
+          indentation = calculate_indentation(pairs.first)
+          replacement = build_replacement(sorted, indentation)
+
+          corrector.replace(hash_arg, replacement)
+        end
+
+        # Build the replacement string with sorted pairs on separate lines.
+        #
+        # @param [Array<RuboCop::AST::Node>] sorted_pairs The sorted pairs.
+        # @param [String] indentation The indentation string.
+        # @return [String]
+        def build_replacement(sorted_pairs, indentation)
+          sorted_pairs.map.with_index do |pair, index|
+            prefix = index.zero? ? "" : indentation
+            suffix = index == sorted_pairs.size - 1 ? "" : ","
+
+            "#{prefix}#{pair.source}#{suffix}"
+          end.join("\n")
+        end
+
+        # Calculate indentation for reformatted pairs.
+        #
+        # @param [RuboCop::AST::Node] first_pair The first pair node.
+        # @return [String]
+        def calculate_indentation(first_pair)
+          " " * first_pair.loc.column
         end
 
         # Check if closing paren is on its own line (after last argument).
@@ -76,46 +104,6 @@ module RuboCop
           end
         end
 
-        # Find hash argument in the call (if any).
-        #
-        # @param [RuboCop::AST::Node] node The send node.
-        # @return [RuboCop::AST::Node, nil]
-        def find_hash_argument(node)
-          node.arguments.find(&:hash_type?)
-        end
-
-        # Check if hash needs correction (same line or unordered).
-        #
-        # @param [RuboCop::AST::Node] hash_arg The hash node.
-        # @return [Boolean]
-        def needs_correction?(hash_arg)
-          pairs = hash_arg.pairs
-
-          return false if pairs.size < 2
-
-          multiple_pairs_on_same_line?(pairs) || !pairs_alphabetically_ordered?(pairs)
-        end
-
-        # Check if multiple pairs are on the same line.
-        #
-        # @param [Array<RuboCop::AST::Node>] pairs The hash pairs.
-        # @return [Boolean]
-        def multiple_pairs_on_same_line?(pairs)
-          lines = pairs.map { |pair| pair.loc.line }
-
-          lines.size != lines.uniq.size
-        end
-
-        # Check if pairs are alphabetically ordered by key name.
-        #
-        # @param [Array<RuboCop::AST::Node>] pairs The hash pairs.
-        # @return [Boolean]
-        def pairs_alphabetically_ordered?(pairs)
-          key_names = pairs.map { |pair| extract_key_name(pair) }
-
-          key_names == key_names.sort
-        end
-
         # Extract the key name as a string for sorting.
         #
         # @param [RuboCop::AST::Node] pair The hash pair node.
@@ -130,40 +118,52 @@ module RuboCop
           end
         end
 
-        # Autocorrect by reordering and splitting pairs.
+        # Find hash argument in the call (if any).
         #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] node The send node.
+        # @return [RuboCop::AST::Node, nil]
+        def find_hash_argument(node)
+          node.arguments.find(&:hash_type?)
+        end
+
+        # Check if this is a multiline call with closing paren on own line.
+        #
+        # @param [RuboCop::AST::Node] node The send node.
+        # @return [Boolean]
+        def multiline_call_with_hash?(node)
+          node.parenthesized? && closing_paren_on_own_line?(node)
+        end
+
+        # Check if multiple pairs are on the same line.
+        #
+        # @param [Array<RuboCop::AST::Node>] pairs The hash pairs.
+        # @return [Boolean]
+        def multiple_pairs_on_same_line?(pairs)
+          lines = pairs.map { |pair| pair.loc.line }
+
+          lines.size != lines.uniq.size
+        end
+
+        # Check if hash needs correction (same line or unordered).
+        #
         # @param [RuboCop::AST::Node] hash_arg The hash node.
-        # @return [void]
-        def autocorrect(corrector, hash_arg)
-          pairs       = hash_arg.pairs
-          sorted      = pairs.sort_by { |pair| extract_key_name(pair) }
-          indentation = calculate_indentation(pairs.first)
-          replacement = build_replacement(sorted, indentation)
+        # @return [Boolean]
+        def needs_correction?(hash_arg)
+          pairs = hash_arg.pairs
 
-          corrector.replace(hash_arg, replacement)
+          return false if pairs.size < 2
+
+          multiple_pairs_on_same_line?(pairs) || !pairs_alphabetically_ordered?(pairs)
         end
 
-        # Calculate indentation for reformatted pairs.
+        # Check if pairs are alphabetically ordered by key name.
         #
-        # @param [RuboCop::AST::Node] first_pair The first pair node.
-        # @return [String]
-        def calculate_indentation(first_pair)
-          " " * first_pair.loc.column
-        end
+        # @param [Array<RuboCop::AST::Node>] pairs The hash pairs.
+        # @return [Boolean]
+        def pairs_alphabetically_ordered?(pairs)
+          key_names = pairs.map { |pair| extract_key_name(pair) }
 
-        # Build the replacement string with sorted pairs on separate lines.
-        #
-        # @param [Array<RuboCop::AST::Node>] sorted_pairs The sorted pairs.
-        # @param [String] indentation The indentation string.
-        # @return [String]
-        def build_replacement(sorted_pairs, indentation)
-          sorted_pairs.map.with_index do |pair, index|
-            prefix = index.zero? ? "" : indentation
-            suffix = index == sorted_pairs.size - 1 ? "" : ","
-
-            "#{prefix}#{pair.source}#{suffix}"
-          end.join("\n")
+          key_names == key_names.sort
         end
       end
     end

@@ -70,6 +70,17 @@ module RuboCop
 
         private
 
+        # Autocorrect the offense by converting to one-liner syntax.
+        #
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [void]
+        def autocorrect(corrector, node)
+          expectation_source = node.body.source
+
+          corrector.replace(node, "it { #{expectation_source} }")
+        end
+
         # Check if the expectation is too complex for one-liner conversion.
         #
         # @param [RuboCop::AST::Node] node The block node.
@@ -94,35 +105,17 @@ module RuboCop
           end
         end
 
-        # Autocorrect the offense by converting to one-liner syntax.
+        # Check if the expectation is using subject as the receiver.
         #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [void]
-        def autocorrect(corrector, node)
-          expectation_source = node.body.source
-
-          corrector.replace(node, "it { #{expectation_source} }")
-        end
-
-        # Check if the block should be processed.
-        #
-        # @param [RuboCop::AST::Node] node The block node.
+        # @param [RuboCop::AST::Node] node The expect node.
         # @return [Boolean]
-        def processable_block?(node)
-          spec_file? && example_block_with_description?(node)
-        end
+        def expect_subject?(node)
+          argument = node.first_argument
 
-        # Check if the body contains only a single statement.
-        #
-        # @param [RuboCop::AST::Node] body The block body.
-        # @return [Boolean]
-        def single_statement?(body)
-          if body
-            !body.begin_type?
-          else
-            false
-          end
+          return false unless argument
+          return false unless argument.send_type?
+
+          argument.method?(:subject)
         end
 
         # Extract the expectation node from the body.
@@ -154,6 +147,14 @@ module RuboCop
           nil
         end
 
+        # Check if the block should be processed.
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Boolean]
+        def processable_block?(node)
+          spec_file? && example_block_with_description?(node)
+        end
+
         # Check if the expectation is simple (not a block expectation).
         #
         # Simple expectations use expect(subject).
@@ -172,17 +173,16 @@ module RuboCop
           expect_subject?(node)
         end
 
-        # Check if the expectation is using subject as the receiver.
+        # Check if the body contains only a single statement.
         #
-        # @param [RuboCop::AST::Node] node The expect node.
+        # @param [RuboCop::AST::Node] body The block body.
         # @return [Boolean]
-        def expect_subject?(node)
-          argument = node.first_argument
-
-          return false unless argument
-          return false unless argument.send_type?
-
-          argument.method?(:subject)
+        def single_statement?(body)
+          if body
+            !body.begin_type?
+          else
+            false
+          end
         end
       end
     end

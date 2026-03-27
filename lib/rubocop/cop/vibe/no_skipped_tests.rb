@@ -79,16 +79,6 @@ module RuboCop
 
         private
 
-        # Check for skip method calls.
-        #
-        # @param [RuboCop::AST::Node] node The send node.
-        # @return [void]
-        def check_skip(node)
-          if skip_call?(node)
-            add_offense(node, message: MSG_SKIP)
-          end
-        end
-
         # Check for pending method calls.
         #
         # @param [RuboCop::AST::Node] node The send node.
@@ -96,6 +86,16 @@ module RuboCop
         def check_pending(node)
           if pending_call?(node)
             add_offense(node, message: MSG_PENDING)
+          end
+        end
+
+        # Check for skip method calls.
+        #
+        # @param [RuboCop::AST::Node] node The send node.
+        # @return [void]
+        def check_skip(node)
+          if skip_call?(node)
+            add_offense(node, message: MSG_SKIP)
           end
         end
 

@@ -58,62 +58,6 @@ module RuboCop
 
         private
 
-        # Check validates-family declarations in a body node.
-        #
-        # @param [RuboCop::AST::Node] body The body node.
-        # @return [void]
-        def check_validates_in_body(body)
-          statements = extract_statements(body)
-
-          return if statements.size < 2
-
-          groups = group_consecutive_statements(statements) { |s| validates_family?(s) }
-
-          groups.each { |group| check_group_order(group) }
-        end
-
-        # Check if a node is a validates-family declaration.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def validates_family?(node)
-          if node.send_type?
-            VALIDATES_METHODS.include?(node.method_name) || node.method?(VALIDATE_METHOD)
-          else
-            false
-          end
-        end
-
-        # Check ordering for a group of validates-family declarations.
-        #
-        # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [void]
-        def check_group_order(group)
-          violations = find_violations(group)
-
-          return if violations.empty?
-
-          violations.each do |validate|
-            add_offense(validate) do |corrector|
-              autocorrect(corrector, group)
-            end
-          end
-        end
-
-        # Find validate calls that appear before validates* declarations.
-        #
-        # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [Array<RuboCop::AST::Node>] Validate nodes that violate ordering.
-        def find_violations(group)
-          last_validates_index = group.rindex { |n| VALIDATES_METHODS.include?(n.method_name) }
-
-          return [] if last_validates_index.nil?
-
-          group.each_with_index.filter_map do |node, index|
-            node if index < last_validates_index && node.method?(VALIDATE_METHOD)
-          end
-        end
-
         # Auto-correct by moving validate calls after validates* declarations.
         #
         # Preserves relative order within each tier.
@@ -135,6 +79,50 @@ module RuboCop
           end
         end
 
+        # Check ordering for a group of validates-family declarations.
+        #
+        # @param [Array<RuboCop::AST::Node>] group The validates group.
+        # @return [void]
+        def check_group_order(group)
+          violations = find_violations(group)
+
+          return if violations.empty?
+
+          violations.each do |validate|
+            add_offense(validate) do |corrector|
+              autocorrect(corrector, group)
+            end
+          end
+        end
+
+        # Check validates-family declarations in a body node.
+        #
+        # @param [RuboCop::AST::Node] body The body node.
+        # @return [void]
+        def check_validates_in_body(body)
+          statements = extract_statements(body)
+
+          return if statements.size < 2
+
+          groups = group_consecutive_statements(statements) { |s| validates_family?(s) }
+
+          groups.each { |group| check_group_order(group) }
+        end
+
+        # Find validate calls that appear before validates* declarations.
+        #
+        # @param [Array<RuboCop::AST::Node>] group The validates group.
+        # @return [Array<RuboCop::AST::Node>] Validate nodes that violate ordering.
+        def find_violations(group)
+          last_validates_index = group.rindex { |n| VALIDATES_METHODS.include?(n.method_name) }
+
+          return [] if last_validates_index.nil?
+
+          group.each_with_index.filter_map do |node, index|
+            node if index < last_validates_index && node.method?(VALIDATE_METHOD)
+          end
+        end
+
         # Check if this is a Rails model.
         #
         # @param [RuboCop::AST::Node] node The class node.
@@ -145,6 +133,18 @@ module RuboCop
             parent_name == "ApplicationRecord" ||
               parent_name == "ActiveRecord::Base" ||
               parent_name.end_with?("::ApplicationRecord")
+          else
+            false
+          end
+        end
+
+        # Check if a node is a validates-family declaration.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def validates_family?(node)
+          if node.send_type?
+            VALIDATES_METHODS.include?(node.method_name) || node.method?(VALIDATE_METHOD)
           else
             false
           end

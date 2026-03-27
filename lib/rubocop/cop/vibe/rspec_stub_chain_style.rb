@@ -77,64 +77,31 @@ module RuboCop
 
         private
 
-        # Check the receive chain for methods that should be on separate lines.
+        # Auto-correct by inserting a newline before the method.
         #
-        # @param [RuboCop::AST::Node] to_node The .to node.
-        # @param [RuboCop::AST::Node] receive_chain The receive chain argument.
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] method_node The method to move.
+        # @param [RuboCop::AST::Node] to_node The .to node for indentation.
         # @return [void]
-        def check_receive_chain(to_node, receive_chain)
-          chain         = extract_chain(receive_chain)
-          receive_index = find_receive_index(chain)
+        def autocorrect_chain(corrector, method_node, to_node)
+          dot_range         = method_node.loc.dot
+          indentation       = calculate_indentation(to_node)
+          replacement_start = find_replacement_start(method_node)
 
-          return unless receive_index
-          return unless chain_has_with?(chain)
-          return unless line_exceeds_max_length?(to_node)
-
-          methods = chain[(receive_index + 1)..]
-
-          check_methods_alignment(to_node, chain[receive_index], methods)
+          corrector.replace(
+            range_between(replacement_start, dot_range.begin_pos),
+            "\n#{indentation}"
+          )
         end
 
-        # Check if the line containing the node exceeds the max line length.
+        # Calculate the indentation for the new line.
         #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def line_exceeds_max_length?(node)
-          line_number = node.loc.line
-          line        = processed_source.lines[line_number - 1]
+        # @param [RuboCop::AST::Node] node The node to base indentation on.
+        # @return [String]
+        def calculate_indentation(node)
+          base_column = find_chain_start_column(node)
 
-          line.length > max_line_length
-        end
-
-        # Get the configured max line length from Layout/LineLength.
-        #
-        # @return [Integer]
-        def max_line_length
-          config.for_cop("Layout/LineLength")["Max"] || 120
-        end
-
-        # Extract the method chain from a node.
-        #
-        # @param [RuboCop::AST::Node] node The send node.
-        # @return [Array<RuboCop::AST::Node>]
-        def extract_chain(node)
-          chain   = []
-          current = node
-
-          while current&.send_type?
-            chain.unshift(current)
-            current = current.receiver
-          end
-
-          chain
-        end
-
-        # Find the index of the receive method in the chain.
-        #
-        # @param [Array<RuboCop::AST::Node>] chain The method chain.
-        # @return [Integer, nil]
-        def find_receive_index(chain)
-          chain.index { |n| RECEIVE_METHODS.include?(n.method_name) }
+          " " * (base_column + 2)
         end
 
         # Check if the chain includes a .with call.
@@ -143,6 +110,14 @@ module RuboCop
         # @return [Boolean]
         def chain_has_with?(chain)
           chain.any? { |n| n.method?(:with) }
+        end
+
+        # Check if the method is one we care about for chaining.
+        #
+        # @param [RuboCop::AST::Node] node The method node.
+        # @return [Boolean]
+        def chainable_method?(node)
+          CHAIN_METHODS.include?(node.method_name)
         end
 
         # Check alignment of methods after receive.
@@ -164,70 +139,38 @@ module RuboCop
           end
         end
 
-        # Check if the method should be flagged.
+        # Check the receive chain for methods that should be on separate lines.
         #
-        # @param [RuboCop::AST::Node] previous_node The previous node.
-        # @param [RuboCop::AST::Node] method_node The method node.
-        # @param [Boolean] is_first Whether this is the first method after receive.
-        # @return [Boolean]
-        def should_flag?(previous_node, method_node, is_first)
-          reference_line = is_first ? previous_node.loc.last_line : previous_node.loc.selector.line
-
-          reference_line == method_node.loc.selector.line
-        end
-
-        # Check if the method is one we care about for chaining.
-        #
-        # @param [RuboCop::AST::Node] node The method node.
-        # @return [Boolean]
-        def chainable_method?(node)
-          CHAIN_METHODS.include?(node.method_name)
-        end
-
-        # Register an offense for a method that should be on its own line.
-        #
-        # @param [RuboCop::AST::Node] method_node The method node.
-        # @param [RuboCop::AST::Node] previous_node The previous node in chain.
+        # @param [RuboCop::AST::Node] to_node The .to node.
+        # @param [RuboCop::AST::Node] receive_chain The receive chain argument.
         # @return [void]
-        def register_offense(method_node, previous_node)
-          add_offense(method_node.loc.selector) do |corrector|
-            autocorrect_chain(corrector, method_node, previous_node)
+        def check_receive_chain(to_node, receive_chain)
+          chain         = extract_chain(receive_chain)
+          receive_index = find_receive_index(chain)
+
+          return unless receive_index
+          return unless chain_has_with?(chain)
+          return unless line_exceeds_max_length?(to_node)
+
+          methods = chain[(receive_index + 1)..]
+
+          check_methods_alignment(to_node, chain[receive_index], methods)
+        end
+
+        # Extract the method chain from a node.
+        #
+        # @param [RuboCop::AST::Node] node The send node.
+        # @return [Array<RuboCop::AST::Node>]
+        def extract_chain(node)
+          chain   = []
+          current = node
+
+          while current&.send_type?
+            chain.unshift(current)
+            current = current.receiver
           end
-        end
 
-        # Auto-correct by inserting a newline before the method.
-        #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] method_node The method to move.
-        # @param [RuboCop::AST::Node] to_node The .to node for indentation.
-        # @return [void]
-        def autocorrect_chain(corrector, method_node, to_node)
-          dot_range         = method_node.loc.dot
-          indentation       = calculate_indentation(to_node)
-          replacement_start = find_replacement_start(method_node)
-
-          corrector.replace(
-            range_between(replacement_start, dot_range.begin_pos),
-            "\n#{indentation}"
-          )
-        end
-
-        # Find the starting position for the replacement.
-        #
-        # @param [RuboCop::AST::Node] method_node The method node.
-        # @return [Integer]
-        def find_replacement_start(method_node)
-          method_node.receiver.source_range.end_pos
-        end
-
-        # Calculate the indentation for the new line.
-        #
-        # @param [RuboCop::AST::Node] node The node to base indentation on.
-        # @return [String]
-        def calculate_indentation(node)
-          base_column = find_chain_start_column(node)
-
-          " " * (base_column + 2)
+          chain
         end
 
         # Find the starting column of the chain.
@@ -242,6 +185,40 @@ module RuboCop
           current.loc.column
         end
 
+        # Find the index of the receive method in the chain.
+        #
+        # @param [Array<RuboCop::AST::Node>] chain The method chain.
+        # @return [Integer, nil]
+        def find_receive_index(chain)
+          chain.index { |n| RECEIVE_METHODS.include?(n.method_name) }
+        end
+
+        # Find the starting position for the replacement.
+        #
+        # @param [RuboCop::AST::Node] method_node The method node.
+        # @return [Integer]
+        def find_replacement_start(method_node)
+          method_node.receiver.source_range.end_pos
+        end
+
+        # Check if the line containing the node exceeds the max line length.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def line_exceeds_max_length?(node)
+          line_number = node.loc.line
+          line        = processed_source.lines[line_number - 1]
+
+          line.length > max_line_length
+        end
+
+        # Get the configured max line length from Layout/LineLength.
+        #
+        # @return [Integer]
+        def max_line_length
+          config.for_cop("Layout/LineLength")["Max"] || 120
+        end
+
         # Create a source range between two positions.
         #
         # @param [Integer] start_pos The start position.
@@ -253,6 +230,29 @@ module RuboCop
             start_pos,
             end_pos
           )
+        end
+
+        # Register an offense for a method that should be on its own line.
+        #
+        # @param [RuboCop::AST::Node] method_node The method node.
+        # @param [RuboCop::AST::Node] previous_node The previous node in chain.
+        # @return [void]
+        def register_offense(method_node, previous_node)
+          add_offense(method_node.loc.selector) do |corrector|
+            autocorrect_chain(corrector, method_node, previous_node)
+          end
+        end
+
+        # Check if the method should be flagged.
+        #
+        # @param [RuboCop::AST::Node] previous_node The previous node.
+        # @param [RuboCop::AST::Node] method_node The method node.
+        # @param [Boolean] is_first Whether this is the first method after receive.
+        # @return [Boolean]
+        def should_flag?(previous_node, method_node, is_first)
+          reference_line = is_first ? previous_node.loc.last_line : previous_node.loc.selector.line
+
+          reference_line == method_node.loc.selector.line
         end
       end
     end

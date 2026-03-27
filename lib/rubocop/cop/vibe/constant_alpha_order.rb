@@ -68,6 +68,33 @@ module RuboCop
 
         private
 
+        # Check if constant declarations are alphabetically ordered.
+        #
+        # @param [Array<RuboCop::AST::Node>] group The constants group.
+        # @return [Boolean]
+        def alphabetically_ordered?(group)
+          names = group.map { |c| c.name.to_s }
+
+          names == names.sort
+        end
+
+        # Auto-correct by reordering constant declarations.
+        #
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [Array<RuboCop::AST::Node>] group The constants group.
+        # @return [void]
+        def autocorrect(corrector, group)
+          sorted = group.sort_by { |c| c.name.to_s }
+
+          group.each_with_index do |constant, index|
+            sorted_constant = sorted[index]
+
+            next if constant == sorted_constant
+
+            corrector.replace(constant, sorted_constant.source)
+          end
+        end
+
         # Check constant declarations in a body node.
         #
         # @param [RuboCop::AST::Node] body The body node.
@@ -98,16 +125,6 @@ module RuboCop
           end
         end
 
-        # Check if constant declarations are alphabetically ordered.
-        #
-        # @param [Array<RuboCop::AST::Node>] group The constants group.
-        # @return [Boolean]
-        def alphabetically_ordered?(group)
-          names = group.map { |c| c.name.to_s }
-
-          names == names.sort
-        end
-
         # Find constant declarations that violate ordering.
         #
         # @param [Array<RuboCop::AST::Node>] group The constants group.
@@ -120,23 +137,6 @@ module RuboCop
           end
 
           violations.uniq
-        end
-
-        # Auto-correct by reordering constant declarations.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [Array<RuboCop::AST::Node>] group The constants group.
-        # @return [void]
-        def autocorrect(corrector, group)
-          sorted = group.sort_by { |c| c.name.to_s }
-
-          group.each_with_index do |constant, index|
-            sorted_constant = sorted[index]
-
-            next if constant == sorted_constant
-
-            corrector.replace(constant, sorted_constant.source)
-          end
         end
       end
     end

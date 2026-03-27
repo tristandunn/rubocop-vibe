@@ -53,6 +53,36 @@ module RuboCop
 
         private
 
+        # Auto-correct the alignment of a constant assignment.
+        #
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] const The constant assignment node.
+        # @param [Integer] target_column The target column for alignment.
+        # @return [void]
+        def autocorrect_alignment(corrector, const, target_column)
+          name_end       = const.loc.name.end_pos
+          operator_start = const.loc.operator.begin_pos
+          total_spaces   = calculate_total_spaces(const, target_column)
+
+          corrector.replace(
+            range_between(name_end, operator_start),
+            " " * total_spaces
+          )
+        end
+
+        # Calculate total spaces needed for alignment.
+        #
+        # @param [RuboCop::AST::Node] const The constant assignment node.
+        # @param [Integer] target_column The target column for alignment.
+        # @return [Integer] The number of spaces (minimum 1).
+        def calculate_total_spaces(const, target_column)
+          current_column = const.loc.operator.column
+          current_spaces = const.loc.operator.begin_pos - const.loc.name.end_pos
+          spaces_needed  = target_column - current_column
+
+          [1, current_spaces + spaces_needed].max
+        end
+
         # Check constants in a body node.
         #
         # @param [RuboCop::AST::Node] body The body node.
@@ -84,36 +114,6 @@ module RuboCop
               autocorrect_alignment(corrector, const, target_column)
             end
           end
-        end
-
-        # Auto-correct the alignment of a constant assignment.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] const The constant assignment node.
-        # @param [Integer] target_column The target column for alignment.
-        # @return [void]
-        def autocorrect_alignment(corrector, const, target_column)
-          name_end       = const.loc.name.end_pos
-          operator_start = const.loc.operator.begin_pos
-          total_spaces   = calculate_total_spaces(const, target_column)
-
-          corrector.replace(
-            range_between(name_end, operator_start),
-            " " * total_spaces
-          )
-        end
-
-        # Calculate total spaces needed for alignment.
-        #
-        # @param [RuboCop::AST::Node] const The constant assignment node.
-        # @param [Integer] target_column The target column for alignment.
-        # @return [Integer] The number of spaces (minimum 1).
-        def calculate_total_spaces(const, target_column)
-          current_column = const.loc.operator.column
-          current_spaces = const.loc.operator.begin_pos - const.loc.name.end_pos
-          spaces_needed  = target_column - current_column
-
-          [1, current_spaces + spaces_needed].max
         end
       end
     end

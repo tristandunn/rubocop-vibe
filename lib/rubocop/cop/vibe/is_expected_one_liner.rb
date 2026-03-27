@@ -58,17 +58,15 @@ module RuboCop
 
         private
 
-        # Find the enclosing example block for a node.
+        # Autocorrect the offense by converting to one-liner syntax.
         #
-        # @param [RuboCop::AST::Node] node The node to search from.
-        # @return [RuboCop::AST::Node]
-        # @return [nil] When no example block is found.
-        def find_example_block(node)
-          node.each_ancestor(:block).find do |ancestor|
-            send_node = ancestor.send_node
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [void]
+        def autocorrect(corrector, node)
+          expectation_source = node.body.source
 
-            send_node.method?(:it) || send_node.method?(:specify)
-          end
+          corrector.replace(node, "it { #{expectation_source} }")
         end
 
         # Check if the expectation is too complex for one-liner conversion.
@@ -95,15 +93,17 @@ module RuboCop
           end
         end
 
-        # Autocorrect the offense by converting to one-liner syntax.
+        # Find the enclosing example block for a node.
         #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [void]
-        def autocorrect(corrector, node)
-          expectation_source = node.body.source
+        # @param [RuboCop::AST::Node] node The node to search from.
+        # @return [RuboCop::AST::Node]
+        # @return [nil] When no example block is found.
+        def find_example_block(node)
+          node.each_ancestor(:block).find do |ancestor|
+            send_node = ancestor.send_node
 
-          corrector.replace(node, "it { #{expectation_source} }")
+            send_node.method?(:it) || send_node.method?(:specify)
+          end
         end
       end
     end

@@ -53,26 +53,31 @@ module RuboCop
 
         private
 
-        # Check if block is a describe or context block.
+        # Check if let declarations are alphabetically ordered.
         #
-        # @param [RuboCop::AST::Node] node The block node.
+        # @param [Array<RuboCop::AST::Node>] group The let group.
         # @return [Boolean]
-        def describe_or_context?(node)
-          node.send_node && %i(describe context).include?(node.method_name)
+        def alphabetically_ordered?(group)
+          names = group.map { |let| extract_let_name(let) }
+
+          names == names.sort
         end
 
-        # Check let declarations in a body node.
+        # Auto-correct by reordering let declarations.
         #
-        # @param [RuboCop::AST::Node] body The body node.
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [Array<RuboCop::AST::Node>] group The let group.
         # @return [void]
-        def check_lets_in_body(body)
-          statements = extract_statements(body)
+        def autocorrect(corrector, group)
+          sorted = group.sort_by { |let| extract_let_name(let) }
 
-          return if statements.size < 2
+          group.each_with_index do |let, index|
+            sorted_let = sorted[index]
 
-          groups = group_consecutive_statements(statements) { |s| let_declaration?(s) }
+            next if let == sorted_let
 
-          groups.each { |group| check_group_order(group) }
+            corrector.replace(let, sorted_let.source)
+          end
         end
 
         # Check ordering for a group of let declarations.
@@ -91,14 +96,26 @@ module RuboCop
           end
         end
 
-        # Check if let declarations are alphabetically ordered.
+        # Check let declarations in a body node.
         #
-        # @param [Array<RuboCop::AST::Node>] group The let group.
-        # @return [Boolean]
-        def alphabetically_ordered?(group)
-          names = group.map { |let| extract_let_name(let) }
+        # @param [RuboCop::AST::Node] body The body node.
+        # @return [void]
+        def check_lets_in_body(body)
+          statements = extract_statements(body)
 
-          names == names.sort
+          return if statements.size < 2
+
+          groups = group_consecutive_statements(statements) { |s| let_declaration?(s) }
+
+          groups.each { |group| check_group_order(group) }
+        end
+
+        # Check if block is a describe or context block.
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Boolean]
+        def describe_or_context?(node)
+          node.send_node && %i(describe context).include?(node.method_name)
         end
 
         # Extract the symbol name from a let declaration.
@@ -124,23 +141,6 @@ module RuboCop
           end
 
           violations.uniq
-        end
-
-        # Auto-correct by reordering let declarations.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [Array<RuboCop::AST::Node>] group The let group.
-        # @return [void]
-        def autocorrect(corrector, group)
-          sorted = group.sort_by { |let| extract_let_name(let) }
-
-          group.each_with_index do |let, index|
-            sorted_let = sorted[index]
-
-            next if let == sorted_let
-
-            corrector.replace(let, sorted_let.source)
-          end
         end
       end
     end

@@ -55,29 +55,30 @@ module RuboCop
 
         private
 
-        # Check validates declarations in a body node.
+        # Check if validates declarations are alphabetically ordered.
         #
-        # @param [RuboCop::AST::Node] body The body node.
-        # @return [void]
-        def check_validates_in_body(body)
-          statements = extract_statements(body)
+        # @param [Array<RuboCop::AST::Node>] group The validates group.
+        # @return [Boolean]
+        def alphabetically_ordered?(group)
+          names = group.map { |v| extract_validates_name(v) }
 
-          return if statements.size < 2
-
-          groups = group_consecutive_statements(statements) { |s| validates_declaration?(s) }
-
-          groups.each { |group| check_group_order(group) }
+          names == names.sort
         end
 
-        # Check if a node is a validates declaration.
+        # Auto-correct by reordering validates declarations.
         #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def validates_declaration?(node)
-          if node.send_type?
-            VALIDATES_METHODS.include?(node.method_name)
-          else
-            false
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [Array<RuboCop::AST::Node>] group The validates group.
+        # @return [void]
+        def autocorrect(corrector, group)
+          sorted = group.sort_by { |v| extract_validates_name(v) }
+
+          group.each_with_index do |validates, index|
+            sorted_validates = sorted[index]
+
+            next if validates == sorted_validates
+
+            corrector.replace(validates, sorted_validates.source)
           end
         end
 
@@ -97,14 +98,18 @@ module RuboCop
           end
         end
 
-        # Check if validates declarations are alphabetically ordered.
+        # Check validates declarations in a body node.
         #
-        # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [Boolean]
-        def alphabetically_ordered?(group)
-          names = group.map { |v| extract_validates_name(v) }
+        # @param [RuboCop::AST::Node] body The body node.
+        # @return [void]
+        def check_validates_in_body(body)
+          statements = extract_statements(body)
 
-          names == names.sort
+          return if statements.size < 2
+
+          groups = group_consecutive_statements(statements) { |s| validates_declaration?(s) }
+
+          groups.each { |group| check_group_order(group) }
         end
 
         # Extract the attribute name from a validates declaration.
@@ -129,23 +134,6 @@ module RuboCop
           violations.uniq
         end
 
-        # Auto-correct by reordering validates declarations.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [Array<RuboCop::AST::Node>] group The validates group.
-        # @return [void]
-        def autocorrect(corrector, group)
-          sorted = group.sort_by { |v| extract_validates_name(v) }
-
-          group.each_with_index do |validates, index|
-            sorted_validates = sorted[index]
-
-            next if validates == sorted_validates
-
-            corrector.replace(validates, sorted_validates.source)
-          end
-        end
-
         # Check if this is a Rails model.
         #
         # @param [RuboCop::AST::Node] node The class node.
@@ -156,6 +144,18 @@ module RuboCop
             parent_name == "ApplicationRecord" ||
               parent_name == "ActiveRecord::Base" ||
               parent_name.end_with?("::ApplicationRecord")
+          else
+            false
+          end
+        end
+
+        # Check if a node is a validates declaration.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def validates_declaration?(node)
+          if node.send_type?
+            VALIDATES_METHODS.include?(node.method_name)
           else
             false
           end

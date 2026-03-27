@@ -49,16 +49,6 @@ module RuboCop
 
         private
 
-        # Check if the block is a hook block (before, after, around).
-        #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Boolean]
-        def hook_block?(node)
-          send_node = node.send_node
-
-          send_node.receiver.nil? && HOOK_METHODS.include?(send_node.method_name)
-        end
-
         # Autocorrect the offense by converting braces to do...end.
         #
         # @param [RuboCop::Cop::Corrector] corrector The corrector.
@@ -69,6 +59,14 @@ module RuboCop
           replacement = build_replacement(node, base_indent)
 
           corrector.replace(block_range(node), replacement)
+        end
+
+        # Get the range from the opening brace to the closing brace.
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Parser::Source::Range]
+        def block_range(node)
+          node.loc.begin.join(node.loc.end)
         end
 
         # Build the replacement string for the block.
@@ -93,14 +91,6 @@ module RuboCop
           parts.join
         end
 
-        # Get the range from the opening brace to the closing brace.
-        #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Parser::Source::Range]
-        def block_range(node)
-          node.loc.begin.join(node.loc.end)
-        end
-
         # Format the body with proper indentation.
         #
         # @param [RuboCop::AST::Node] body The body node.
@@ -108,6 +98,16 @@ module RuboCop
         # @return [String]
         def format_body(body, indent)
           body.source.lines.map { |line| "#{indent}#{line.strip}" }.join("\n")
+        end
+
+        # Check if the block is a hook block (before, after, around).
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Boolean]
+        def hook_block?(node)
+          send_node = node.send_node
+
+          send_node.receiver.nil? && HOOK_METHODS.include?(send_node.method_name)
         end
       end
     end

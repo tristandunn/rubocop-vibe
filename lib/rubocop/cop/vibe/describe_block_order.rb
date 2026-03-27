@@ -99,24 +99,20 @@ module RuboCop
 
         private
 
-        # Check if this is a top-level describe block.
+        # Auto-correct by reordering describe blocks.
         #
-        # @param [RuboCop::AST::Node] node The block node.
-        # @return [Boolean]
-        def top_level_describe?(node)
-          describe_block?(node) &&
-            node.each_ancestor(:block).none? { |ancestor| describe_block?(ancestor) }
-        end
+        # @param [RuboCop::AST::Corrector] corrector The corrector.
+        # @param [Array<Hash>] blocks The list of describe blocks.
+        # @return [void]
+        def autocorrect(corrector, blocks)
+          sorted_blocks = blocks.sort_by { |b| [b[:priority], b[:original_index]] }
 
-        # Extract second-level describe blocks.
-        #
-        # @param [RuboCop::AST::Node] top_node The top-level describe block.
-        # @return [Array<Hash>] Array of describe block info.
-        def extract_describe_blocks(top_node)
-          if top_node.body
-            block_nodes(top_node).map.with_index { |node, index| build_block_info(node, index) }
-          else
-            []
+          blocks.each_with_index do |block, index|
+            sorted_block = sorted_blocks[index]
+
+            next if block == sorted_block
+
+            corrector.replace(block[:node], sorted_block[:node].source)
           end
         end
 
@@ -146,27 +142,6 @@ module RuboCop
           }
         end
 
-        # Extract description string from describe block.
-        #
-        # Only string and symbol literals are supported for ordering.
-        # Constants and variables return nil and will be assigned DEFAULT_PRIORITY.
-        #
-        # @param [RuboCop::AST::Node] node The describe block node.
-        # @return [String] The description string from a string or symbol literal.
-        # @return [nil] When description is not a string/symbol literal.
-        def extract_description(node)
-          first_arg = node.send_node.first_argument
-
-          return unless first_arg
-
-          if first_arg.str_type?
-            first_arg.value
-          elsif first_arg.sym_type?
-            first_arg.value.to_s
-          end
-          # Returns nil for constants/variables - they get DEFAULT_PRIORITY.
-        end
-
         # Categorize description and assign priority.
         #
         # Universal order: class (0) → constants (5) → .class_method (100) → #instance_method (200)
@@ -188,13 +163,12 @@ module RuboCop
           end
         end
 
-        # Get priority for special sections.
+        # Check if description is a controller action.
         #
         # @param [String] description The describe block description.
-        # @return [Integer]
-        # @return [nil] When not a special section.
-        def special_section_priority(description)
-          SPECIAL_SECTIONS[description]
+        # @return [Boolean]
+        def controller_action?(description)
+          CONTROLLER_ACTIONS.include?(description)
         end
 
         # Get priority for controller actions.
@@ -218,24 +192,37 @@ module RuboCop
           processed_source.file_path.include?("spec/controllers/")
         end
 
-        # Get priority for method descriptions.
+        # Extract second-level describe blocks.
         #
-        # @param [String] description The describe block description.
-        # @return [Integer]
-        # @return [nil] When not a method description.
-        def method_priority(description)
-          return 100 if description.start_with?(".")
-          return 200 if description.start_with?("#")
-
-          nil
+        # @param [RuboCop::AST::Node] top_node The top-level describe block.
+        # @return [Array<Hash>] Array of describe block info.
+        def extract_describe_blocks(top_node)
+          if top_node.body
+            block_nodes(top_node).map.with_index { |node, index| build_block_info(node, index) }
+          else
+            []
+          end
         end
 
-        # Check if description is a controller action.
+        # Extract description string from describe block.
         #
-        # @param [String] description The describe block description.
-        # @return [Boolean]
-        def controller_action?(description)
-          CONTROLLER_ACTIONS.include?(description)
+        # Only string and symbol literals are supported for ordering.
+        # Constants and variables return nil and will be assigned DEFAULT_PRIORITY.
+        #
+        # @param [RuboCop::AST::Node] node The describe block node.
+        # @return [String] The description string from a string or symbol literal.
+        # @return [nil] When description is not a string/symbol literal.
+        def extract_description(node)
+          first_arg = node.send_node.first_argument
+
+          return unless first_arg
+
+          if first_arg.str_type?
+            first_arg.value
+          elsif first_arg.sym_type?
+            first_arg.value.to_s
+          end
+          # Returns nil for constants/variables - they get DEFAULT_PRIORITY.
         end
 
         # Find describe blocks that are out of order.
@@ -252,21 +239,34 @@ module RuboCop
           violations.uniq
         end
 
-        # Auto-correct by reordering describe blocks.
+        # Get priority for method descriptions.
         #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [Array<Hash>] blocks The list of describe blocks.
-        # @return [void]
-        def autocorrect(corrector, blocks)
-          sorted_blocks = blocks.sort_by { |b| [b[:priority], b[:original_index]] }
+        # @param [String] description The describe block description.
+        # @return [Integer]
+        # @return [nil] When not a method description.
+        def method_priority(description)
+          return 100 if description.start_with?(".")
+          return 200 if description.start_with?("#")
 
-          blocks.each_with_index do |block, index|
-            sorted_block = sorted_blocks[index]
+          nil
+        end
 
-            next if block == sorted_block
+        # Get priority for special sections.
+        #
+        # @param [String] description The describe block description.
+        # @return [Integer]
+        # @return [nil] When not a special section.
+        def special_section_priority(description)
+          SPECIAL_SECTIONS[description]
+        end
 
-            corrector.replace(block[:node], sorted_block[:node].source)
-          end
+        # Check if this is a top-level describe block.
+        #
+        # @param [RuboCop::AST::Node] node The block node.
+        # @return [Boolean]
+        def top_level_describe?(node)
+          describe_block?(node) &&
+            node.each_ancestor(:block).none? { |ancestor| describe_block?(ancestor) }
         end
       end
     end

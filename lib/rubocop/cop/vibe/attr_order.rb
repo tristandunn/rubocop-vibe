@@ -42,14 +42,6 @@ module RuboCop
 
         private
 
-        # Check if the node is an attr_* method call.
-        #
-        # @param [RuboCop::AST::Node] node The send node.
-        # @return [Boolean]
-        def attr_method?(node)
-          node.receiver.nil? && ATTR_METHODS.include?(node.method_name)
-        end
-
         # Check if all arguments are symbols.
         #
         # @param [Array<RuboCop::AST::Node>] arguments The arguments.
@@ -66,6 +58,14 @@ module RuboCop
           names = arguments.map { |arg| arg.value.to_s }
 
           names == names.sort
+        end
+
+        # Check if the node is an attr_* method call.
+        #
+        # @param [RuboCop::AST::Node] node The send node.
+        # @return [Boolean]
+        def attr_method?(node)
+          node.receiver.nil? && ATTR_METHODS.include?(node.method_name)
         end
 
         # Auto-correct by reordering arguments alphabetically.

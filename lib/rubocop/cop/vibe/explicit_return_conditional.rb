@@ -63,6 +63,71 @@ module RuboCop
 
         private
 
+        # Autocorrect modifier conditional to if/end block.
+        #
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] node The modifier if node.
+        # @return [void]
+        def autocorrect_modifier(corrector, node)
+          corrector.replace(node, build_if_block(node))
+        end
+
+        # Autocorrect ternary operator to if/else/end block.
+        #
+        # @param [RuboCop::Cop::Corrector] corrector The corrector.
+        # @param [RuboCop::AST::Node] node The ternary node.
+        # @return [void]
+        def autocorrect_ternary(corrector, node)
+          corrector.replace(node, build_if_else_block(node))
+        end
+
+        # Build the condition for the if block.
+        # For unless, negate the condition. For if, keep it as is.
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [String] The condition source.
+        def build_condition(node)
+          if node.unless? && !node.condition.type?(:and, :or)
+            negate_condition(node.condition)
+          else
+            node.condition.source
+          end
+        end
+
+        # Build if/end block replacement for modifier conditional.
+        #
+        # @param [RuboCop::AST::Node] node The modifier if node.
+        # @return [String]
+        def build_if_block(node)
+          keyword      = node.unless? && node.condition.type?(:and, :or) ? "unless" : "if"
+          condition    = build_condition(node)
+          base_indent  = " " * node.loc.column
+          inner_indent = "#{base_indent}  "
+
+          [
+            "#{keyword} #{condition}",
+            "#{inner_indent}#{node.if_branch.source}",
+            "#{base_indent}end"
+          ].join("\n")
+        end
+
+        # Build if/else/end block replacement for ternary.
+        #
+        # @param [RuboCop::AST::Node] node The ternary node.
+        # @return [String]
+        def build_if_else_block(node)
+          base_indent  = " " * node.loc.column
+          inner_indent = "#{base_indent}  "
+
+          [
+            "if #{node.condition.source}",
+            "#{inner_indent}#{node.if_branch.source}",
+            "#{base_indent}else",
+            "#{inner_indent}#{node.else_branch.source}",
+            "#{base_indent}end"
+          ].join("\n")
+        end
+
         # Check if the return value is a conditional that should be explicit.
         #
         # @param [RuboCop::AST::Node] body The method body node.
@@ -91,13 +156,15 @@ module RuboCop
           end
         end
 
-        # Register offense for ternary operator.
+        # Negate a condition, handling simple cases cleanly.
         #
-        # @param [RuboCop::AST::Node] node The ternary node.
-        # @return [void]
-        def register_ternary_offense(node)
-          add_offense(node, message: MSG_TERNARY) do |corrector|
-            autocorrect_ternary(corrector, node)
+        # @param [RuboCop::AST::Node] condition The condition node.
+        # @return [String] The negated condition.
+        def negate_condition(condition)
+          if condition.send_type? && condition.method?(:!)
+            condition.receiver.source
+          else
+            "!#{condition.source}"
           end
         end
 
@@ -111,80 +178,13 @@ module RuboCop
           end
         end
 
-        # Autocorrect ternary operator to if/else/end block.
-        #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] node The ternary node.
-        # @return [void]
-        def autocorrect_ternary(corrector, node)
-          corrector.replace(node, build_if_else_block(node))
-        end
-
-        # Autocorrect modifier conditional to if/end block.
-        #
-        # @param [RuboCop::Cop::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] node The modifier if node.
-        # @return [void]
-        def autocorrect_modifier(corrector, node)
-          corrector.replace(node, build_if_block(node))
-        end
-
-        # Build if/else/end block replacement for ternary.
+        # Register offense for ternary operator.
         #
         # @param [RuboCop::AST::Node] node The ternary node.
-        # @return [String]
-        def build_if_else_block(node)
-          base_indent  = " " * node.loc.column
-          inner_indent = "#{base_indent}  "
-
-          [
-            "if #{node.condition.source}",
-            "#{inner_indent}#{node.if_branch.source}",
-            "#{base_indent}else",
-            "#{inner_indent}#{node.else_branch.source}",
-            "#{base_indent}end"
-          ].join("\n")
-        end
-
-        # Build if/end block replacement for modifier conditional.
-        #
-        # @param [RuboCop::AST::Node] node The modifier if node.
-        # @return [String]
-        def build_if_block(node)
-          keyword      = node.unless? && node.condition.type?(:and, :or) ? "unless" : "if"
-          condition    = build_condition(node)
-          base_indent  = " " * node.loc.column
-          inner_indent = "#{base_indent}  "
-
-          [
-            "#{keyword} #{condition}",
-            "#{inner_indent}#{node.if_branch.source}",
-            "#{base_indent}end"
-          ].join("\n")
-        end
-
-        # Build the condition for the if block.
-        # For unless, negate the condition. For if, keep it as is.
-        #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [String] The condition source.
-        def build_condition(node)
-          if node.unless? && !node.condition.type?(:and, :or)
-            negate_condition(node.condition)
-          else
-            node.condition.source
-          end
-        end
-
-        # Negate a condition, handling simple cases cleanly.
-        #
-        # @param [RuboCop::AST::Node] condition The condition node.
-        # @return [String] The negated condition.
-        def negate_condition(condition)
-          if condition.send_type? && condition.method?(:!)
-            condition.receiver.source
-          else
-            "!#{condition.source}"
+        # @return [void]
+        def register_ternary_offense(node)
+          add_offense(node, message: MSG_TERNARY) do |corrector|
+            autocorrect_ternary(corrector, node)
           end
         end
       end

@@ -40,58 +40,12 @@ module RuboCop
 
         private
 
-        # Check scope declarations in a body node.
-        #
-        # @param [RuboCop::AST::Node] body The body node.
-        # @return [void]
-        def check_scopes_in_body(body)
-          statements = extract_statements(body)
-
-          return if statements.size < 2
-
-          groups = group_consecutive_statements(statements) { |s| scope_declaration?(s) }
-
-          groups.each { |group| check_group_alignment(group) }
-        end
-
-        # Check if a node is a scope declaration with a lambda.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def scope_declaration?(node)
-          return false unless node.send_type?
-          return false unless node.method?(:scope)
-          return false unless node.receiver.nil?
-          return false unless node.arguments[1]&.block_type?
-
-          node.arguments[1].method?(:lambda)
-        end
-
         # Get the source range of the `->` arrow in a scope declaration.
         #
         # @param [RuboCop::AST::Node] scope_node The scope send node.
         # @return [Parser::Source::Range]
         def arrow_range(scope_node)
           scope_node.arguments[1].send_node.loc.selector
-        end
-
-        # Check alignment for a group of scope declarations.
-        #
-        # @param [Array<RuboCop::AST::Node>] group The scope group.
-        # @return [void]
-        def check_group_alignment(group)
-          columns       = group.map { |scope| arrow_range(scope).column }
-          target_column = columns.max
-
-          group.each do |scope|
-            current_column = arrow_range(scope).column
-
-            next if current_column == target_column
-
-            add_offense(scope.first_argument) do |corrector|
-              autocorrect_alignment(corrector, scope, target_column)
-            end
-          end
         end
 
         # Auto-correct the alignment of a scope declaration.
@@ -125,6 +79,52 @@ module RuboCop
           spaces_needed  = target_column - current_column
 
           [1, current_spaces + spaces_needed].max
+        end
+
+        # Check alignment for a group of scope declarations.
+        #
+        # @param [Array<RuboCop::AST::Node>] group The scope group.
+        # @return [void]
+        def check_group_alignment(group)
+          columns       = group.map { |scope| arrow_range(scope).column }
+          target_column = columns.max
+
+          group.each do |scope|
+            current_column = arrow_range(scope).column
+
+            next if current_column == target_column
+
+            add_offense(scope.first_argument) do |corrector|
+              autocorrect_alignment(corrector, scope, target_column)
+            end
+          end
+        end
+
+        # Check scope declarations in a body node.
+        #
+        # @param [RuboCop::AST::Node] body The body node.
+        # @return [void]
+        def check_scopes_in_body(body)
+          statements = extract_statements(body)
+
+          return if statements.size < 2
+
+          groups = group_consecutive_statements(statements) { |s| scope_declaration?(s) }
+
+          groups.each { |group| check_group_alignment(group) }
+        end
+
+        # Check if a node is a scope declaration with a lambda.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def scope_declaration?(node)
+          return false unless node.send_type?
+          return false unless node.method?(:scope)
+          return false unless node.receiver.nil?
+          return false unless node.arguments[1]&.block_type?
+
+          node.arguments[1].method?(:lambda)
         end
       end
     end

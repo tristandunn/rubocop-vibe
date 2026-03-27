@@ -55,36 +55,13 @@ module RuboCop
 
         private
 
-        # Check if the block should be processed.
+        # Check if there's a blank line between two statements.
         #
-        # @param [RuboCop::AST::Node] node The block node.
+        # @param [RuboCop::AST::Node] previous_node The previous statement.
+        # @param [RuboCop::AST::Node] current_node The current statement.
         # @return [Boolean]
-        def processable_block?(node)
-          spec_file? && example_block?(node) && node.body
-        end
-
-        # Extract statements from the block body.
-        #
-        # @param [RuboCop::AST::Node] body The block body.
-        # @return [Array<RuboCop::AST::Node>]
-        def extract_statements(body)
-          if body.begin_type?
-            body.children
-          else
-            [body]
-          end
-        end
-
-        # Check statements for missing blank lines before expectations.
-        #
-        # @param [Array<RuboCop::AST::Node>] statements The statements to check.
-        # @return [void]
-        def check_statements(statements)
-          statements.each_with_index do |statement, index|
-            next if index.zero?
-
-            check_statement_pair(statements[index - 1], statement)
-          end
+        def blank_line_between?(previous_node, current_node)
+          current_node.loc.line - previous_node.loc.last_line > 1
         end
 
         # Check a pair of statements for missing blank line.
@@ -102,14 +79,27 @@ module RuboCop
           register_offense(expect_node, previous_statement)
         end
 
-        # Register an offense for missing blank line.
+        # Check statements for missing blank lines before expectations.
         #
-        # @param [RuboCop::AST::Node] expect_node The expect node.
-        # @param [RuboCop::AST::Node] previous_statement The previous statement.
+        # @param [Array<RuboCop::AST::Node>] statements The statements to check.
         # @return [void]
-        def register_offense(expect_node, previous_statement)
-          add_offense(expect_node.loc.selector) do |corrector|
-            corrector.insert_after(previous_statement, "\n")
+        def check_statements(statements)
+          statements.each_with_index do |statement, index|
+            next if index.zero?
+
+            check_statement_pair(statements[index - 1], statement)
+          end
+        end
+
+        # Extract statements from the block body.
+        #
+        # @param [RuboCop::AST::Node] body The block body.
+        # @return [Array<RuboCop::AST::Node>]
+        def extract_statements(body)
+          if body.begin_type?
+            body.children
+          else
+            [body]
           end
         end
 
@@ -133,13 +123,23 @@ module RuboCop
           node.each_descendant(:send).find { |send_node| expect_call?(send_node) }
         end
 
-        # Check if there's a blank line between two statements.
+        # Check if the block should be processed.
         #
-        # @param [RuboCop::AST::Node] previous_node The previous statement.
-        # @param [RuboCop::AST::Node] current_node The current statement.
+        # @param [RuboCop::AST::Node] node The block node.
         # @return [Boolean]
-        def blank_line_between?(previous_node, current_node)
-          current_node.loc.line - previous_node.loc.last_line > 1
+        def processable_block?(node)
+          spec_file? && example_block?(node) && node.body
+        end
+
+        # Register an offense for missing blank line.
+        #
+        # @param [RuboCop::AST::Node] expect_node The expect node.
+        # @param [RuboCop::AST::Node] previous_statement The previous statement.
+        # @return [void]
+        def register_offense(expect_node, previous_statement)
+          add_offense(expect_node.loc.selector) do |corrector|
+            corrector.insert_after(previous_statement, "\n")
+          end
         end
       end
     end

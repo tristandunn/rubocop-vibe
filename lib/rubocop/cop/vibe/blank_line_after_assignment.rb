@@ -68,6 +68,45 @@ module RuboCop
 
         private
 
+        # Get the variable name from an assignment node.
+        #
+        # @param [RuboCop::AST::Node] node The assignment node.
+        # @return [Symbol, nil]
+        def assigned_variable_name(node)
+          return node.children.first if node.lvasgn_type?
+
+          target = node.children.first
+
+          if target.lvasgn_type?
+            target.children.first
+          end
+        end
+
+        # Check if a node is a variable assignment.
+        #
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def assignment?(node)
+          node.type?(:lvasgn, :op_asgn, :or_asgn, :and_asgn)
+        end
+
+        # Get the value being assigned.
+        #
+        # @param [RuboCop::AST::Node] node The assignment node.
+        # @return [RuboCop::AST::Node, nil]
+        def assignment_value(node)
+          node.children.last
+        end
+
+        # Check if there's a blank line between two statements.
+        #
+        # @param [RuboCop::AST::Node] previous_node The previous statement.
+        # @param [RuboCop::AST::Node] current_node The current statement.
+        # @return [Boolean]
+        def blank_line_between?(previous_node, current_node)
+          current_node.loc.line - previous_node.loc.last_line > 1
+        end
+
         # Check the body for missing blank lines after assignments.
         #
         # @param [RuboCop::AST::Node] body The body node.
@@ -79,18 +118,6 @@ module RuboCop
 
           statements.each_cons(2) do |current, following|
             check_statement_pair(current, following)
-          end
-        end
-
-        # Extract statements from a body node.
-        #
-        # @param [RuboCop::AST::Node] body The body node.
-        # @return [Array<RuboCop::AST::Node>]
-        def extract_statements(body)
-          if body.begin_type?
-            body.children
-          else
-            [body]
           end
         end
 
@@ -114,17 +141,6 @@ module RuboCop
           end
         end
 
-        # Get the inner statement from a modifier node.
-        #
-        # @param [RuboCop::AST::Node] node The node to unwrap.
-        # @return [RuboCop::AST::Node]
-        def inner_statement(node)
-          return node.if_branch if node.type?(:if) && node.modifier_form?
-          return node.body if node.type?(:while, :until) && node.modifier_form?
-
-          node
-        end
-
         # Check if both statements are FactoryBot calls.
         #
         # @param [RuboCop::AST::Node] assignment The assignment node.
@@ -134,12 +150,16 @@ module RuboCop
           factory_bot_call?(assignment_value(assignment)) && factory_bot_call?(following)
         end
 
-        # Get the value being assigned.
+        # Extract statements from a body node.
         #
-        # @param [RuboCop::AST::Node] node The assignment node.
-        # @return [RuboCop::AST::Node, nil]
-        def assignment_value(node)
-          node.children.last
+        # @param [RuboCop::AST::Node] body The body node.
+        # @return [Array<RuboCop::AST::Node>]
+        def extract_statements(body)
+          if body.begin_type?
+            body.children
+          else
+            [body]
+          end
         end
 
         # Check if a node is a FactoryBot method call.
@@ -167,18 +187,15 @@ module RuboCop
           receiver.lvar_type? && receiver.children.first == var_name
         end
 
-        # Get the variable name from an assignment node.
+        # Get the inner statement from a modifier node.
         #
-        # @param [RuboCop::AST::Node] node The assignment node.
-        # @return [Symbol, nil]
-        def assigned_variable_name(node)
-          return node.children.first if node.lvasgn_type?
+        # @param [RuboCop::AST::Node] node The node to unwrap.
+        # @return [RuboCop::AST::Node]
+        def inner_statement(node)
+          return node.if_branch if node.type?(:if) && node.modifier_form?
+          return node.body if node.type?(:while, :until) && node.modifier_form?
 
-          target = node.children.first
-
-          if target.lvasgn_type?
-            target.children.first
-          end
+          node
         end
 
         # Get the leftmost receiver in a method chain.
@@ -194,23 +211,6 @@ module RuboCop
           current = current.receiver while current.send_type? && current.receiver
 
           current
-        end
-
-        # Check if a node is a variable assignment.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def assignment?(node)
-          node.type?(:lvasgn, :op_asgn, :or_asgn, :and_asgn)
-        end
-
-        # Check if there's a blank line between two statements.
-        #
-        # @param [RuboCop::AST::Node] previous_node The previous statement.
-        # @param [RuboCop::AST::Node] current_node The current statement.
-        # @return [Boolean]
-        def blank_line_between?(previous_node, current_node)
-          current_node.loc.line - previous_node.loc.last_line > 1
         end
       end
     end

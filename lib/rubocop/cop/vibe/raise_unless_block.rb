@@ -48,14 +48,6 @@ module RuboCop
 
         private
 
-        # Check if the node is a raise method call.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def raise_call?(node)
-          node.send_type? && node.method?(:raise)
-        end
-
         # Autocorrect the offense by converting to if block.
         #
         # @param [RuboCop::Cop::Corrector] corrector The corrector.
@@ -65,6 +57,21 @@ module RuboCop
           replacement = build_replacement(node)
 
           corrector.replace(node, replacement)
+        end
+
+        # Build the condition for the if/unless block.
+        # For unless with a compound condition, keep it as-is (paired with unless keyword).
+        # For unless with a simple condition, negate it.
+        # For if, keep as-is.
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [String] The condition source.
+        def build_condition(node)
+          if node.unless? && !node.condition.type?(:and, :or)
+            "!#{node.condition.source}"
+          else
+            node.condition.source
+          end
         end
 
         # Build the replacement code for the raise statement.
@@ -85,19 +92,12 @@ module RuboCop
           ].join("\n")
         end
 
-        # Build the condition for the if/unless block.
-        # For unless with a compound condition, keep it as-is (paired with unless keyword).
-        # For unless with a simple condition, negate it.
-        # For if, keep as-is.
+        # Check if the node is a raise method call.
         #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [String] The condition source.
-        def build_condition(node)
-          if node.unless? && !node.condition.type?(:and, :or)
-            "!#{node.condition.source}"
-          else
-            node.condition.source
-          end
+        # @param [RuboCop::AST::Node] node The node to check.
+        # @return [Boolean]
+        def raise_call?(node)
+          node.send_type? && node.method?(:raise)
         end
       end
     end

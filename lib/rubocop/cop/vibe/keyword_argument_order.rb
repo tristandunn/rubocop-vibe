@@ -43,14 +43,6 @@ module RuboCop
 
         private
 
-        # Extract keyword arguments from a method definition.
-        #
-        # @param [RuboCop::AST::Node] node The def node.
-        # @return [Array<RuboCop::AST::Node>]
-        def extract_keyword_arguments(node)
-          node.arguments.select { |arg| arg.type?(:kwarg, :kwoptarg) }
-        end
-
         # Check if keyword arguments are correctly ordered.
         #
         # Required kwargs come first (alphabetically), then optional kwargs (alphabetically).
@@ -59,21 +51,6 @@ module RuboCop
         # @return [Boolean]
         def alphabetically_ordered?(kwargs)
           kwargs == kwargs.sort_by { |arg| kwarg_sort_key(arg) }
-        end
-
-        # Generate a sort key for a keyword argument.
-        #
-        # Required kwargs come first alphabetically, then optional kwargs alphabetically.
-        #
-        # @param [RuboCop::AST::Node] arg The argument node.
-        # @return [Array]
-        def kwarg_sort_key(arg)
-          # kwargs array is pre-filtered to only include kwarg/kwoptarg types
-          if arg.kwarg_type?
-            [0, arg.name.to_s]
-          else
-            [1, arg.name.to_s]
-          end
         end
 
         # Auto-correct by reordering keyword arguments and documentation.
@@ -102,24 +79,6 @@ module RuboCop
           corrector.replace(args_range, sorted_source)
         end
 
-        # Generate a sort key for an argument.
-        #
-        # Positional arguments come first, then required keyword arguments
-        # alphabetically, then optional keyword arguments alphabetically.
-        #
-        # @param [RuboCop::AST::Node] arg The argument node.
-        # @return [Array]
-        def sort_key(arg)
-          case arg.type
-          when :kwarg
-            [1, arg.name.to_s]
-          when :kwoptarg
-            [2, arg.name.to_s]
-          else
-            [0, ""]
-          end
-        end
-
         # Auto-correct YARD @param documentation.
         #
         # @param [RuboCop::AST::Corrector] corrector The corrector.
@@ -140,12 +99,12 @@ module RuboCop
           reorder_param_comments(corrector, param_comments, sorted_kwarg_names)
         end
 
-        # Get comments preceding a node.
+        # Extract keyword arguments from a method definition.
         #
-        # @param [RuboCop::AST::Node] node The node.
-        # @return [Array<Parser::Source::Comment>]
-        def preceding_comments(node)
-          processed_source.ast_with_comments[node] || []
+        # @param [RuboCop::AST::Node] node The def node.
+        # @return [Array<RuboCop::AST::Node>]
+        def extract_keyword_arguments(node)
+          node.arguments.select { |arg| arg.type?(:kwarg, :kwoptarg) }
         end
 
         # Extract @param comments for keyword arguments.
@@ -161,6 +120,29 @@ module RuboCop
 
             match && kwarg_names.include?(match[1])
           end
+        end
+
+        # Generate a sort key for a keyword argument.
+        #
+        # Required kwargs come first alphabetically, then optional kwargs alphabetically.
+        #
+        # @param [RuboCop::AST::Node] arg The argument node.
+        # @return [Array]
+        def kwarg_sort_key(arg)
+          # kwargs array is pre-filtered to only include kwarg/kwoptarg types
+          if arg.kwarg_type?
+            [0, arg.name.to_s]
+          else
+            [1, arg.name.to_s]
+          end
+        end
+
+        # Get comments preceding a node.
+        #
+        # @param [RuboCop::AST::Node] node The node.
+        # @return [Array<Parser::Source::Comment>]
+        def preceding_comments(node)
+          processed_source.ast_with_comments[node] || []
         end
 
         # Reorder @param comments to match argument order.
@@ -182,6 +164,24 @@ module RuboCop
             next if comment == sorted_comment
 
             corrector.replace(comment, sorted_comment.text)
+          end
+        end
+
+        # Generate a sort key for an argument.
+        #
+        # Positional arguments come first, then required keyword arguments
+        # alphabetically, then optional keyword arguments alphabetically.
+        #
+        # @param [RuboCop::AST::Node] arg The argument node.
+        # @return [Array]
+        def sort_key(arg)
+          case arg.type
+          when :kwarg
+            [1, arg.name.to_s]
+          when :kwoptarg
+            [2, arg.name.to_s]
+          else
+            [0, ""]
           end
         end
       end

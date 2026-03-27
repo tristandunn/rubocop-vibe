@@ -37,12 +37,11 @@ module RuboCop
       # NOTE: Examples use underscore (rubocop_disable) to prevent RuboCop from
       # parsing them as actual directives. In real code, use colon (rubocop:disable).
       class NoRubocopDisable < Base
-        MSG        = "Do not disable `%<cops>s`. Fix the issue or configure globally in `.rubocop.yml`."
-        MSG_NO_COP = "Do not use `# rubocop:disable`. Fix the issue or configure globally in `.rubocop.yml`."
-
         ALL_PATTERN      = /\brubocop\s*:\s*disable\s+all\b/i
         COP_NAME_PATTERN = %r{[A-Za-z]+/[A-Za-z0-9]+}
         DISABLE_PATTERN  = /\A#\s*rubocop\s*:\s*disable\b/i
+        MSG              = "Do not disable `%<cops>s`. Fix the issue or configure globally in `.rubocop.yml`."
+        MSG_NO_COP       = "Do not use `# rubocop:disable`. Fix the issue or configure globally in `.rubocop.yml`."
 
         # Check for rubocop:disable comments.
         #
@@ -57,12 +56,19 @@ module RuboCop
 
         private
 
-        # Check if the comment is a rubocop:disable directive.
+        # Check if a cop is in the allowed list.
         #
-        # @param [Parser::Source::Comment] comment The comment to check.
+        # @param [String] cop The cop name.
         # @return [Boolean]
-        def disable_comment?(comment)
-          DISABLE_PATTERN.match?(comment.text)
+        def allowed_cop?(cop)
+          allowed_cops.include?(cop)
+        end
+
+        # Get the list of allowed cops from configuration.
+        #
+        # @return [Array<String>]
+        def allowed_cops
+          @allowed_cops ||= Array(cop_config.fetch("AllowedCops", []))
         end
 
         # Check disabled cops and flag disallowed ones.
@@ -82,27 +88,20 @@ module RuboCop
           end
         end
 
+        # Check if the comment is a rubocop:disable directive.
+        #
+        # @param [Parser::Source::Comment] comment The comment to check.
+        # @return [Boolean]
+        def disable_comment?(comment)
+          DISABLE_PATTERN.match?(comment.text)
+        end
+
         # Extract cop names from a rubocop:disable comment.
         #
         # @param [String] text The comment text.
         # @return [Array<String>]
         def extract_cop_names(text)
           text.scan(COP_NAME_PATTERN)
-        end
-
-        # Check if a cop is in the allowed list.
-        #
-        # @param [String] cop The cop name.
-        # @return [Boolean]
-        def allowed_cop?(cop)
-          allowed_cops.include?(cop)
-        end
-
-        # Get the list of allowed cops from configuration.
-        #
-        # @return [Array<String>]
-        def allowed_cops
-          @allowed_cops ||= Array(cop_config.fetch("AllowedCops", []))
         end
       end
     end

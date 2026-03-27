@@ -69,6 +69,37 @@ module RuboCop
           end
         end
 
+        # Extract the condition node from a conditional ancestor.
+        #
+        # @param [RuboCop::AST::Node] ancestor The conditional ancestor.
+        # @return [RuboCop::AST::Node]
+        def condition_node(ancestor)
+          if ancestor.type?(:if, :while, :until)
+            ancestor.condition
+          else
+            ancestor
+          end
+        end
+
+        # Check if node is (part of) the condition of the ancestor.
+        #
+        # @param [RuboCop::AST::Node] node The and/or node.
+        # @param [RuboCop::AST::Node] ancestor The if/while/until/when ancestor.
+        # @return [Boolean]
+        def condition_of_ancestor?(node, ancestor)
+          condition = condition_node(ancestor)
+
+          node_within_condition?(node, condition)
+        end
+
+        # Find the nearest conditional ancestor (if/while/until/when).
+        #
+        # @param [RuboCop::AST::Node] node The node.
+        # @return [RuboCop::AST::Node, nil]
+        def conditional_ancestor(node)
+          node.each_ancestor.find { |a| a.type?(:if, :while, :until, :when) }
+        end
+
         # Check if node is in a conditional position (if/unless/while/until/when condition).
         #
         # @param [RuboCop::AST::Node] node The and/or node.
@@ -83,35 +114,12 @@ module RuboCop
           end
         end
 
-        # Find the nearest conditional ancestor (if/while/until/when).
+        # Check if node is inside a return statement.
         #
         # @param [RuboCop::AST::Node] node The node.
-        # @return [RuboCop::AST::Node, nil]
-        def conditional_ancestor(node)
-          node.each_ancestor.find { |a| a.type?(:if, :while, :until, :when) }
-        end
-
-        # Check if node is (part of) the condition of the ancestor.
-        #
-        # @param [RuboCop::AST::Node] node The and/or node.
-        # @param [RuboCop::AST::Node] ancestor The if/while/until/when ancestor.
         # @return [Boolean]
-        def condition_of_ancestor?(node, ancestor)
-          condition = condition_node(ancestor)
-
-          node_within_condition?(node, condition)
-        end
-
-        # Extract the condition node from a conditional ancestor.
-        #
-        # @param [RuboCop::AST::Node] ancestor The conditional ancestor.
-        # @return [RuboCop::AST::Node]
-        def condition_node(ancestor)
-          if ancestor.type?(:if, :while, :until)
-            ancestor.condition
-          else
-            ancestor
-          end
+        def inside_return_statement?(node)
+          node.each_ancestor.any?(&:return_type?)
         end
 
         # Check if node is within the condition subtree.
@@ -123,14 +131,6 @@ module RuboCop
           return true if condition == node
 
           condition.each_descendant.any?(node)
-        end
-
-        # Check if node is inside a return statement.
-        #
-        # @param [RuboCop::AST::Node] node The node.
-        # @return [Boolean]
-        def inside_return_statement?(node)
-          node.each_ancestor.any?(&:return_type?)
         end
       end
     end

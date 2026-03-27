@@ -73,75 +73,12 @@ module RuboCop
 
         private
 
-        # Check if the unless statement is a guard clause (early return).
-        #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [Boolean]
-        def guard_clause?(node)
-          if node.body.return_type?
-            parent = node.parent
-            if parent.begin_type?
-              following_statements?(parent, node)
-            else
-              false
-            end
-          else
-            false
-          end
-        end
-
-        # Check if there are statements after the node in the parent block.
-        #
-        # @param [RuboCop::AST::Node] parent The parent begin block.
-        # @param [RuboCop::AST::Node] node The current node.
-        # @return [Boolean]
-        def following_statements?(parent, node)
-          siblings   = parent.children
-          node_index = siblings.index(node)
-
-          siblings[(node_index + 1)..].any?
-        end
-
-        # Check if this unless guard clause is part of a sequence of guard clauses.
-        # When there are multiple guard clauses together, they should stay at the same level.
-        #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [Boolean]
-        def part_of_guard_clause_sequence?(node)
-          siblings   = node.parent.children
-          node_index = siblings.index(node)
-
-          # Check for other guard clauses before this one.
-          preceding_guards = siblings[0...node_index].any? { |sibling| any_guard_clause?(sibling) }
-
-          # Check for other guard clauses after this one.
-          following_guards = siblings[(node_index + 1)..].any? { |sibling| any_guard_clause?(sibling) }
-
-          preceding_guards || following_guards
-        end
-
         # Check if a node is any type of guard clause (if or unless).
         #
         # @param [RuboCop::AST::Node] node The node to check.
         # @return [Boolean]
         def any_guard_clause?(node)
           node.if_type? && node.modifier_form? && node.body.return_type?
-        end
-
-        # Check if transforming this guard clause would create nested conditionals.
-        # If the remaining code is a conditional, we'd nest it inside our new if block.
-        #
-        # Note: This is only called after guard_clause? returns true, which means
-        # there are statements after this node, so remaining will never be empty.
-        #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [Boolean]
-        def would_create_nested_conditional?(node)
-          siblings        = node.parent.children
-          node_index      = siblings.index(node)
-          first_statement = siblings[node_index + 1]
-
-          first_statement.type?(:if, :case)
         end
 
         # Autocorrect the offense by converting to positive if condition.
@@ -154,24 +91,6 @@ module RuboCop
           range       = replacement_range(node)
 
           corrector.replace(range, replacement)
-        end
-
-        # Build the replacement code for the guard clause.
-        #
-        # @param [RuboCop::AST::Node] node The if node.
-        # @return [String] The replacement code.
-        def build_replacement(node)
-          condition      = node.condition.source
-          return_value   = extract_return_value(node.body)
-          base_indent    = " " * node.loc.column
-          inner_indent   = "#{base_indent}  "
-          remaining_code = get_remaining_code(node)
-
-          if return_value
-            build_if_else_replacement(condition, remaining_code, return_value, base_indent, inner_indent)
-          else
-            build_if_replacement(condition, remaining_code, base_indent, inner_indent)
-          end
         end
 
         # Build if/else replacement code.
@@ -207,6 +126,46 @@ module RuboCop
           ].join("\n")
         end
 
+        # Build the replacement code for the guard clause.
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [String] The replacement code.
+        def build_replacement(node)
+          condition      = node.condition.source
+          return_value   = extract_return_value(node.body)
+          base_indent    = " " * node.loc.column
+          inner_indent   = "#{base_indent}  "
+          remaining_code = get_remaining_code(node)
+
+          if return_value
+            build_if_else_replacement(condition, remaining_code, return_value, base_indent, inner_indent)
+          else
+            build_if_replacement(condition, remaining_code, base_indent, inner_indent)
+          end
+        end
+
+        # Extract the return value from a return node.
+        #
+        # @param [RuboCop::AST::Node] node The return node.
+        # @return [String, nil] The return value source or nil if no value.
+        def extract_return_value(node)
+          if node.children.any?
+            node.children.first.source
+          end
+        end
+
+        # Check if there are statements after the node in the parent block.
+        #
+        # @param [RuboCop::AST::Node] parent The parent begin block.
+        # @param [RuboCop::AST::Node] node The current node.
+        # @return [Boolean]
+        def following_statements?(parent, node)
+          siblings   = parent.children
+          node_index = siblings.index(node)
+
+          siblings[(node_index + 1)..].any?
+        end
+
         # Get the code remaining after the guard clause.
         #
         # @param [RuboCop::AST::Node] node The if node.
@@ -216,6 +175,50 @@ module RuboCop
           node_index = siblings.index(node)
 
           siblings[(node_index + 1)..].map(&:source).join("\n")
+        end
+
+        # Check if the unless statement is a guard clause (early return).
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [Boolean]
+        def guard_clause?(node)
+          if node.body.return_type?
+            parent = node.parent
+            if parent.begin_type?
+              following_statements?(parent, node)
+            else
+              false
+            end
+          else
+            false
+          end
+        end
+
+        # Indent each line of code with the specified indentation.
+        #
+        # @param [String] code The code to indent.
+        # @param [String] indentation The indentation string.
+        # @return [String] The indented code.
+        def indent_lines(code, indentation)
+          code.lines.map { |line| "#{indentation}#{line}" }.join.chomp
+        end
+
+        # Check if this unless guard clause is part of a sequence of guard clauses.
+        # When there are multiple guard clauses together, they should stay at the same level.
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [Boolean]
+        def part_of_guard_clause_sequence?(node)
+          siblings   = node.parent.children
+          node_index = siblings.index(node)
+
+          # Check for other guard clauses before this one.
+          preceding_guards = siblings[0...node_index].any? { |sibling| any_guard_clause?(sibling) }
+
+          # Check for other guard clauses after this one.
+          following_guards = siblings[(node_index + 1)..].any? { |sibling| any_guard_clause?(sibling) }
+
+          preceding_guards || following_guards
         end
 
         # Get the replacement range.
@@ -230,23 +233,20 @@ module RuboCop
           Parser::Source::Range.new(node.source_range.source_buffer, start_pos, end_pos)
         end
 
-        # Extract the return value from a return node.
+        # Check if transforming this guard clause would create nested conditionals.
+        # If the remaining code is a conditional, we'd nest it inside our new if block.
         #
-        # @param [RuboCop::AST::Node] node The return node.
-        # @return [String, nil] The return value source or nil if no value.
-        def extract_return_value(node)
-          if node.children.any?
-            node.children.first.source
-          end
-        end
+        # Note: This is only called after guard_clause? returns true, which means
+        # there are statements after this node, so remaining will never be empty.
+        #
+        # @param [RuboCop::AST::Node] node The if node.
+        # @return [Boolean]
+        def would_create_nested_conditional?(node)
+          siblings        = node.parent.children
+          node_index      = siblings.index(node)
+          first_statement = siblings[node_index + 1]
 
-        # Indent each line of code with the specified indentation.
-        #
-        # @param [String] code The code to indent.
-        # @param [String] indentation The indentation string.
-        # @return [String] The indented code.
-        def indent_lines(code, indentation)
-          code.lines.map { |line| "#{indentation}#{line}" }.join.chomp
+          first_statement.type?(:if, :case)
         end
       end
     end
