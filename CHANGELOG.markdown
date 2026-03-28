@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — March 28th, 2026
 
 - Add alphabetical ordering for private and protected methods to ClassOrganization.
 - Add attr_accessor, attr_reader, and attr_writer support to ClassOrganization.
