@@ -39,9 +39,9 @@ module RuboCop
       #   end
       class ClassOrganization < Base
         extend AutoCorrector
+        include BodyOrganization
 
-        ASSOCIATIONS    = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
-        ATTR_SORT_ORDER = { attr_accessor: "!0", attr_reader: "!1", attr_writer: "!2" }.freeze
+        ASSOCIATIONS = %i(belongs_to has_one has_many has_and_belongs_to_many).freeze
         CALLBACKS = %i(
           before_validation after_validation
           before_save after_save around_save
@@ -86,288 +86,78 @@ module RuboCop
           validates_length_of validates_numericality_of validates_presence_of
           validates_size_of validates_uniqueness_of validates_associated
         ).freeze
-        VISIBILITY_CATEGORIES = {
-          protected: :protected_methods,
-          private:   :private_methods,
-          public:    :instance_methods
-        }.freeze
-
-        # Check and register violations.
-        #
-        # @param [RuboCop::AST::Node] class_node The class node.
-        # @param [Array<Hash>] elements The elements.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @return [void]
-        def check_violations(class_node, elements, is_model)
-          violations = find_violations(elements)
-
-          return if violations.empty?
-
-          message = is_model ? MODEL_MSG : CLASS_MSG
-
-          add_offense(violations.first[:node], message: message) do |corrector|
-            autocorrect(corrector, class_node, elements)
-          end
-        end
 
         # Check class nodes for organization.
         #
         # @param [RuboCop::AST::Node] node The class node.
         # @return [void]
         def on_class(node)
-          is_model      = rails_model?(node)
-          is_controller = rails_controller?(node)
+          @is_model      = rails_model?(node)
+          @is_controller = rails_controller?(node)
 
-          return if !is_model && !is_controller && !node.body
+          return if !@is_model && !@is_controller && !node.body
+          return unless node.body
 
-          elements = extract_elements(node, is_model: is_model, is_controller: is_controller)
+          elements = collect_class_elements(node.body)
 
           return if elements.size < 2
 
-          check_violations(node, elements, is_model)
+          check_body_violations(node, elements)
         end
 
         private
 
-        # Get category for attr methods based on visibility.
-        #
-        # @param [Symbol] visibility The current visibility.
-        # @return [Symbol]
-        def attr_category(visibility)
-          if visibility == :public
-            :attr_methods
-          else
-            visibility_method_category(visibility)
-          end
-        end
-
-        # Check if node is an attr method.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def attr_method?(node)
-          node.send_type? && ATTR_SORT_ORDER.key?(node.method_name)
-        end
-
-        # Auto-correct by sorting elements within each visibility section.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [RuboCop::AST::Node] _class_node The class node.
-        # @param [Array<Hash>] elements The list of elements.
-        # @return [void]
-        def autocorrect(corrector, _class_node, elements)
-          elements.group_by { |e| e[:visibility] }.each_value do |section|
-            sorted = sort_elements(section)
-
-            next if sorted == section
-
-            autocorrect_group(corrector, section, sorted)
-          end
-        end
-
-        # Auto-correct a single consecutive group.
-        #
-        # @param [RuboCop::AST::Corrector] corrector The corrector.
-        # @param [Array<Hash>] group The original elements.
-        # @param [Array<Hash>] sorted The sorted elements.
-        # @return [void]
-        def autocorrect_group(corrector, group, sorted)
-          sorted.each_with_index do |element, idx|
-            original = group[idx]
-
-            next if element[:node] == original[:node]
-
-            corrector.replace(
-              node_range_with_comments(original[:node]),
-              source_with_comments(element[:node])
-            )
-          end
-        end
-
-        # Build element hash for a node.
-        #
-        # @param [RuboCop::AST::Node] child The node.
-        # @param [Symbol] visibility The current visibility.
-        # @param [Integer] index The original index.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @param [Boolean] is_controller Whether this is a Rails controller.
-        # @return [Hash]
-        # @return [nil]
-        def build_element(child, visibility, index, is_model, is_controller)
-          return unless categorizable?(child)
-
-          category = categorize_node(child, visibility, is_model)
-
-          return unless category
-
-          # Skip public instance methods in controllers (Rails/ActionOrder handles them).
-          return if is_controller && category == :instance_methods && visibility == :public
-
-          element_hash(child, category, visibility, index, is_model)
-        end
-
-        # Check if node should be categorized.
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def categorizable?(node)
-          node.type?(:send, :any_def, :casgn)
-        end
-
-        # Categorize a node.
+        # Categorize send nodes for classes.
         #
         # @param [RuboCop::AST::Node] node The node to categorize.
-        # @param [Symbol] visibility The current visibility.
-        # @param [Boolean] is_model Whether this is a Rails model.
+        # @param [Symbol] _visibility The current visibility.
         # @return [Symbol]
-        # @return [nil] When node doesn't fit a category.
-        def categorize_node(node, visibility, is_model)
-          return method_category(node, visibility) if node.any_def_type?
-          return :constants if node.casgn_type?
+        # @return [nil]
+        def categorize_send_node(node, _visibility)
+          return :concerns if node.method?(:include)
+          return nil unless @is_model
 
-          return nil if visibility_modifier?(node)
-          return attr_category(visibility) if attr_method?(node)
+          return :associations if ASSOCIATIONS.include?(node.method_name)
+          return :validations if validation_method?(node)
+          return :callbacks if CALLBACKS.include?(node.method_name)
+          return :scopes if node.method?(:scope)
 
-          send_category(node, visibility, is_model)
+          nil
         end
 
-        # Collect elements from body nodes.
+        # Collect elements from class body with controller filtering.
         #
         # @param [RuboCop::AST::Node] body The body node.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @param [Boolean] is_controller Whether this is a Rails controller.
         # @return [Array<Hash>] Array of element hashes.
-        def collect_elements(body, is_model, is_controller)
+        def collect_class_elements(body)
           visibility = :public
           elements   = []
-          index      = 0
 
           process_body_nodes(body).each do |child|
             visibility = child.method_name if visibility_modifier?(child)
+            element = build_body_element(child, visibility, elements.size)
 
-            element = build_element(child, visibility, index, is_model, is_controller)
+            next if element.nil? || controller_public_instance_method?(element, visibility)
 
-            elements << element and index += 1 if element
+            elements << element
           end
 
           elements
         end
 
-        # Get comments immediately before a node.
-        #
-        # @param [RuboCop::AST::Node] node The node.
-        # @return [Array<Parser::Source::Comment>] Consecutive comments before node.
-        def comments_before(node)
-          consecutive   = []
-          expected_line = node.first_line - 1
-
-          while (comment = comments_by_line[expected_line])
-            consecutive.unshift(comment)
-            expected_line -= 1
-          end
-
-          consecutive
+        # Check if element is a public instance method in a controller.
+        def controller_public_instance_method?(element, visibility)
+          @is_controller && element[:category] == :instance_methods && visibility == :public
         end
 
-        # Get comments indexed by line number for fast lookup.
+        # Get the priority hash for the current context.
         #
-        # @return [Hash<Integer, Parser::Source::Comment>] Comments keyed by line.
-        def comments_by_line
-          @comments_by_line ||= processed_source.comments.to_h { |c| [c.location.line, c] }
-        end
-
-        # Create element hash.
-        #
-        # @param [RuboCop::AST::Node] node The node.
-        # @param [Symbol] category The category.
-        # @param [Symbol] visibility The visibility.
-        # @param [Integer] index The original index.
-        # @param [Boolean] is_model Whether this is a Rails model.
         # @return [Hash]
-        def element_hash(node, category, visibility, index, is_model)
-          {
-            node:           node,
-            category:       category,
-            visibility:     visibility,
-            original_index: index,
-            priority:       priority_for(category, node, is_model),
-            sort_key:       sort_key_for(category, node)
-          }
-        end
-
-        # Extract and categorize elements from the class.
-        #
-        # @param [RuboCop::AST::Node] node The class node.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @param [Boolean] is_controller Whether this is a Rails controller.
-        # @return [Array<Hash>] Array of element info.
-        def extract_elements(node, is_model:, is_controller: false)
-          if node.body
-            collect_elements(node.body, is_model, is_controller)
+        def priorities
+          if @is_model
+            MODEL_PRIORITIES
           else
-            []
-          end
-        end
-
-        # Find elements that violate ordering.
-        #
-        # @param [Array<Hash>] elements The list of elements.
-        # @return [Array<Hash>] Elements that violate ordering.
-        def find_violations(elements)
-          violations = []
-
-          elements.each_cons(2) do |current, following|
-            violations << following if violates_order?(current, following)
-          end
-
-          violations.uniq
-        end
-
-        # Categorize method nodes.
-        #
-        # @param [RuboCop::AST::Node] node The node to categorize.
-        # @param [Symbol] visibility The current visibility.
-        # @return [Symbol]
-        def method_category(node, visibility)
-          return :class_methods if node.defs_type?
-          return :initialize if node.method?(:initialize) && visibility == :public
-
-          visibility_method_category(visibility)
-        end
-
-        # Get the source range of a node including preceding comments.
-        #
-        # @param [RuboCop::AST::Node] node The node.
-        # @return [Parser::Source::Range]
-        def node_range_with_comments(node)
-          comment_list = comments_before(node)
-
-          start_range = comment_list.any? ? comment_list.first.source_range : node.source_range
-
-          start_range.join(node.source_range)
-        end
-
-        # Get priority for a category.
-        #
-        # @param [Symbol] category The category.
-        # @param [RuboCop::AST::Node] _node The node.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @return [Integer]
-        def priority_for(category, _node, is_model)
-          priorities = is_model ? MODEL_PRIORITIES : CLASS_PRIORITIES
-
-          priorities[category] || 999
-        end
-
-        # Process body nodes to get a flat list.
-        #
-        # @param [RuboCop::AST::Node] body The body node.
-        # @return [Array<RuboCop::AST::Node>]
-        def process_body_nodes(body)
-          if body.begin_type?
-            body.children
-          else
-            [body]
+            CLASS_PRIORITIES
           end
         end
 
@@ -416,33 +206,6 @@ module RuboCop
           first_arg.value.to_s
         end
 
-        # Categorize send nodes.
-        #
-        # @param [RuboCop::AST::Node] node The node to categorize.
-        # @param [Symbol] _visibility The current visibility.
-        # @param [Boolean] is_model Whether this is a Rails model.
-        # @return [Symbol]
-        # @return [nil]
-        def send_category(node, _visibility, is_model)
-          return :concerns if node.method?(:include)
-          return nil unless is_model
-
-          return :associations if ASSOCIATIONS.include?(node.method_name)
-          return :validations if validation_method?(node)
-          return :callbacks if CALLBACKS.include?(node.method_name)
-          return :scopes if node.method?(:scope)
-
-          nil
-        end
-
-        # Sort elements by priority, sort key, and original index.
-        #
-        # @param [Array<Hash>] elements The list of elements.
-        # @return [Array<Hash>]
-        def sort_elements(elements)
-          elements.sort_by { |e| [e[:priority], e[:sort_key], e[:original_index]] }
-        end
-
         # Get sort key for alphabetical ordering within category.
         #
         # @param [Symbol] category The category.
@@ -459,14 +222,6 @@ module RuboCop
           node.method_name.to_s
         end
 
-        # Get the source of a node including preceding comments.
-        #
-        # @param [RuboCop::AST::Node] node The node.
-        # @return [String]
-        def source_with_comments(node)
-          node_range_with_comments(node).source
-        end
-
         # Check if node is a validation method.
         #
         # @param [RuboCop::AST::Node] node The node to check.
@@ -476,52 +231,15 @@ module RuboCop
             node.method_name.to_s.start_with?("validates_")
         end
 
-        # Check if element violates alphabetical ordering.
+        # Get the violation message for the current context.
         #
-        # @param [Hash] current The current element.
-        # @param [Hash] following The following element.
-        # @return [Boolean]
-        def violates_alphabetical_order?(current, following)
-          current[:priority] == following[:priority] &&
-            !current[:sort_key].empty? &&
-            current[:sort_key] > following[:sort_key]
-        end
-
-        # Check if element violates category ordering.
-        #
-        # @param [Hash] current The current element.
-        # @param [Hash] following The following element.
-        # @return [Boolean]
-        def violates_category_order?(current, following)
-          current[:priority] > following[:priority]
-        end
-
-        # Check if element violates ordering.
-        #
-        # @param [Hash] current The current element.
-        # @param [Hash] following The following element.
-        # @return [Boolean]
-        def violates_order?(current, following)
-          violates_category_order?(current, following) ||
-            violates_alphabetical_order?(current, following)
-        end
-
-        # Get category for visibility-based instance methods.
-        #
-        # @param [Symbol] visibility The visibility.
-        # @return [Symbol]
-        # @return [nil]
-        def visibility_method_category(visibility)
-          VISIBILITY_CATEGORIES[visibility]
-        end
-
-        # Check if node is a visibility modifier (public, protected, private).
-        #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [Boolean]
-        def visibility_modifier?(node)
-          node.send_type? && node.receiver.nil? &&
-            %i(public protected private).include?(node.method_name)
+        # @return [String]
+        def violation_message
+          if @is_model
+            MODEL_MSG
+          else
+            CLASS_MSG
+          end
         end
       end
     end

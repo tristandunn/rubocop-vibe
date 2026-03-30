@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "vibe/mixin/alignment_helpers"
+require_relative "vibe/mixin/organization_helpers"
+require_relative "vibe/mixin/body_organization"
 require_relative "vibe/mixin/spec_file_helper"
 
 require_relative "vibe/attr_order"
@@ -19,6 +21,7 @@ require_relative "vibe/explicit_return_conditional"
 require_relative "vibe/is_expected_one_liner"
 require_relative "vibe/keyword_argument_order"
 require_relative "vibe/let_order"
+require_relative "vibe/module_organization"
 require_relative "vibe/multiline_hash_argument_style"
 require_relative "vibe/no_assigns_attribute_testing"
 require_relative "vibe/no_compound_conditions"

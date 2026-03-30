@@ -160,6 +160,12 @@ Vibe/LetOrder:
   SafeAutoCorrect: true
   VersionAdded: "0.4.0"
 
+Vibe/ModuleOrganization:
+  Description: "Enforces consistent organization of module definitions."
+  Enabled: true
+  SafeAutoCorrect: false
+  VersionAdded: "0.7.0"
+
 Vibe/MultilineHashArgumentStyle:
   Description: "Enforces one-per-line and alphabetical ordering for hash arguments in multiline method calls."
   Enabled: true

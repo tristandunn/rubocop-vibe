@@ -10,6 +10,18 @@ module RuboCop
       module AlignmentHelpers
         private
 
+        # Check if two matched statements are consecutive (no gaps).
+        #
+        # @param [Array] first First [index, statement] pair.
+        # @param [Array] second Second [index, statement] pair.
+        # @param [Array<RuboCop::AST::Node>] statements Original statements.
+        # @return [Boolean]
+        def consecutive?(first, second, statements)
+          idx_a, stmt_a = first
+          idx_b, = second
+          idx_b == idx_a + 1 && no_blank_line_between?(stmt_a, statements[idx_b])
+        end
+
         # Extract statements from a body node.
         #
         # @param [RuboCop::AST::Node] body The body node.
@@ -20,20 +32,6 @@ module RuboCop
           else
             [body]
           end
-        end
-
-        # Group consecutive statements based on a predicate.
-        #
-        # Iterates through statements and groups consecutive ones where the block
-        # returns true. Groups are broken by non-matching statements or blank lines.
-        #
-        # @param [Array<RuboCop::AST::Node>] statements The statements.
-        # @yield [RuboCop::AST::Node] Block to determine if statement matches criteria.
-        # @return [Array<Array<RuboCop::AST::Node>>] Groups of consecutive matching statements.
-        def group_consecutive_statements(statements, &)
-          matching_with_indices = find_matching_statements(statements, &)
-
-          group_by_consecutive_lines(matching_with_indices, statements)
         end
 
         # Find statements matching the predicate with their indices.
@@ -57,16 +55,18 @@ module RuboCop
             .filter_map { |group| group.map(&:last) if group.size > 1 }
         end
 
-        # Check if two matched statements are consecutive (no gaps).
+        # Group consecutive statements based on a predicate.
         #
-        # @param [Array] first First [index, statement] pair.
-        # @param [Array] second Second [index, statement] pair.
-        # @param [Array<RuboCop::AST::Node>] statements Original statements.
-        # @return [Boolean]
-        def consecutive?(first, second, statements)
-          idx_a, stmt_a = first
-          idx_b, = second
-          idx_b == idx_a + 1 && no_blank_line_between?(stmt_a, statements[idx_b])
+        # Iterates through statements and groups consecutive ones where the block
+        # returns true. Groups are broken by non-matching statements or blank lines.
+        #
+        # @param [Array<RuboCop::AST::Node>] statements The statements.
+        # @yield [RuboCop::AST::Node] Block to determine if statement matches criteria.
+        # @return [Array<Array<RuboCop::AST::Node>>] Groups of consecutive matching statements.
+        def group_consecutive_statements(statements, &)
+          matching_with_indices = find_matching_statements(statements, &)
+
+          group_by_consecutive_lines(matching_with_indices, statements)
         end
 
         # Check if there's no blank line between two statements.

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Vibe/ModuleOrganization cop.
+
 ## 0.6.0 — March 28th, 2026
 
 - Add alphabetical ordering for private and protected methods to ClassOrganization.
