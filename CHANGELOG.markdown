@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add Vibe/ModuleOrganization cop.
+- Fix ConsecutiveAssignmentAlignment flagging assignments with blocks.
 
 ## 0.6.0 — March 28th, 2026
 

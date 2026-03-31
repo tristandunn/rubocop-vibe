@@ -94,7 +94,9 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements, &:lvasgn_type?)
+          groups = group_consecutive_statements(statements) do |s|
+            s.lvasgn_type? && !s.children.last.block_type?
+          end
 
           groups.each { |group| check_group_alignment(group) }
         end

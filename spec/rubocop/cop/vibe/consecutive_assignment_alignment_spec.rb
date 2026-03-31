@@ -316,6 +316,33 @@ RSpec.describe RuboCop::Cop::Vibe::ConsecutiveAssignmentAlignment, :config do
       end
     end
 
+    context "with block assignments" do
+      it "does not register an offense for assignments with blocks" do
+        expect_no_offenses(<<~RUBY)
+          def setup
+            checking = budget.accounts.find_or_create_by!(name: "Checking") do |account|
+              account.balance = 250_000
+            end
+            savings = budget.accounts.find_or_create_by!(name: "Savings") do |account|
+              account.balance = 100_000
+            end
+          end
+        RUBY
+      end
+
+      it "breaks the group when a block assignment is between simple assignments" do
+        expect_no_offenses(<<~RUBY)
+          def setup
+            a = 1
+            b = items.map do |item|
+              item.name
+            end
+            c = 3
+          end
+        RUBY
+      end
+    end
+
     context "with instance variable assignments" do
       it "does not register an offense" do
         expect_no_offenses(<<~RUBY)
