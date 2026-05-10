@@ -112,7 +112,7 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| indexed_assignment?(s) }
+          groups = group_consecutive_statements(statements) { |statement| indexed_assignment?(statement) }
 
           groups.each { |group| check_group_alignment(group) }
         end

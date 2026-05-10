@@ -113,7 +113,7 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| let_declaration?(s) }
+          groups = group_consecutive_statements(statements) { |statement| let_declaration?(statement) }
 
           groups.each { |group| check_group_alignment(group) }
         end

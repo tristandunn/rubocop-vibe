@@ -97,7 +97,7 @@ module RuboCop
         # @param [RuboCop::AST::Node] node The node.
         # @return [RuboCop::AST::Node, nil]
         def conditional_ancestor(node)
-          node.each_ancestor.find { |a| a.type?(:if, :while, :until, :when) }
+          node.each_ancestor.find { |ancestor| ancestor.type?(:if, :while, :until, :when) }
         end
 
         # Check if node is in a conditional position (if/unless/while/until/when condition).

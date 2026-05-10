@@ -60,7 +60,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [Boolean]
         def alphabetically_ordered?(group)
-          names = group.map { |v| extract_validates_name(v) }
+          names = group.map { |validates| extract_validates_name(validates) }
 
           names == names.sort
         end
@@ -71,7 +71,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [void]
         def autocorrect(corrector, group)
-          sorted = group.sort_by { |v| extract_validates_name(v) }
+          sorted = group.sort_by { |validates| extract_validates_name(validates) }
 
           group.each_with_index do |validates, index|
             sorted_validates = sorted[index]
@@ -107,7 +107,7 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| validates_declaration?(s) }
+          groups = group_consecutive_statements(statements) { |statement| validates_declaration?(statement) }
 
           groups.each { |group| check_group_order(group) }
         end

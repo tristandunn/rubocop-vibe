@@ -51,7 +51,7 @@ module RuboCop
         # @return [Array<Array<RuboCop::AST::Node>>] Groups with 2+ consecutive statements.
         def group_by_consecutive_lines(matches, statements)
           matches
-            .chunk_while { |a, b| consecutive?(a, b, statements) }
+            .chunk_while { |previous, current| consecutive?(previous, current, statements) }
             .filter_map { |group| group.map(&:last) if group.size > 1 }
         end
 

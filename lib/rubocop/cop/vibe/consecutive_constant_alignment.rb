@@ -92,7 +92,9 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| s.casgn_type? && s.single_line? }
+          groups = group_consecutive_statements(statements) do |statement|
+            statement.casgn_type? && statement.single_line?
+          end
 
           groups.each { |group| check_group_alignment(group) }
         end

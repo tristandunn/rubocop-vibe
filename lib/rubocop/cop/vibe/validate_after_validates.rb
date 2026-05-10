@@ -66,8 +66,8 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [void]
         def autocorrect(corrector, group)
-          validates_nodes = group.select { |n| VALIDATES_METHODS.include?(n.method_name) }
-          validate_nodes  = group.select { |n| n.method?(VALIDATE_METHOD) }
+          validates_nodes = group.select { |node| VALIDATES_METHODS.include?(node.method_name) }
+          validate_nodes  = group.select { |node| node.method?(VALIDATE_METHOD) }
           sorted          = validates_nodes + validate_nodes
 
           group.each_with_index do |node, index|
@@ -104,7 +104,7 @@ module RuboCop
 
           return if statements.size < 2
 
-          groups = group_consecutive_statements(statements) { |s| validates_family?(s) }
+          groups = group_consecutive_statements(statements) { |statement| validates_family?(statement) }
 
           groups.each { |group| check_group_order(group) }
         end
@@ -114,7 +114,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The validates group.
         # @return [Array<RuboCop::AST::Node>] Validate nodes that violate ordering.
         def find_violations(group)
-          last_validates_index = group.rindex { |n| VALIDATES_METHODS.include?(n.method_name) }
+          last_validates_index = group.rindex { |node| VALIDATES_METHODS.include?(node.method_name) }
 
           return [] if last_validates_index.nil?
 

@@ -109,7 +109,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] chain The method chain.
         # @return [Boolean]
         def chain_has_with?(chain)
-          chain.any? { |n| n.method?(:with) }
+          chain.any? { |node| node.method?(:with) }
         end
 
         # Check if the method is one we care about for chaining.
@@ -190,7 +190,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] chain The method chain.
         # @return [Integer, nil]
         def find_receive_index(chain)
-          chain.index { |n| RECEIVE_METHODS.include?(n.method_name) }
+          chain.index { |node| RECEIVE_METHODS.include?(node.method_name) }
         end
 
         # Find the starting position for the replacement.

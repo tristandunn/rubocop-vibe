@@ -37,7 +37,7 @@ module RuboCop
 
         # Get comments indexed by line number for fast lookup.
         def comments_by_line
-          @comments_by_line ||= processed_source.comments.to_h { |c| [c.location.line, c] }
+          @comments_by_line ||= processed_source.comments.to_h { |comment| [comment.location.line, comment] }
         end
 
         # Get the source range of a node including preceding comments.

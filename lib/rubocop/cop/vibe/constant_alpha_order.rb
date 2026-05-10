@@ -73,7 +73,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The constants group.
         # @return [Boolean]
         def alphabetically_ordered?(group)
-          names = group.map { |c| c.name.to_s }
+          names = group.map { |constant| constant.name.to_s }
 
           names == names.sort
         end
@@ -84,7 +84,7 @@ module RuboCop
         # @param [Array<RuboCop::AST::Node>] group The constants group.
         # @return [void]
         def autocorrect(corrector, group)
-          sorted = group.sort_by { |c| c.name.to_s }
+          sorted = group.sort_by { |constant| constant.name.to_s }
 
           group.each_with_index do |constant, index|
             sorted_constant = sorted[index]

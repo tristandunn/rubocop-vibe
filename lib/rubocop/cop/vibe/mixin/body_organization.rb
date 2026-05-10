@@ -26,7 +26,7 @@ module RuboCop
 
         # Auto-correct by sorting elements within each visibility section.
         def autocorrect(corrector, _container_node, elements)
-          elements.group_by { |e| e[:visibility] }.each_value do |section|
+          elements.group_by { |element| element[:visibility] }.each_value do |section|
             sorted = sort_elements(section)
 
             next if sorted == section
@@ -109,7 +109,7 @@ module RuboCop
 
         # Sort elements by priority, sort key, and original index.
         def sort_elements(elements)
-          elements.sort_by { |e| [e[:priority], e[:sort_key], e[:original_index]] }
+          elements.sort_by { |element| [element[:priority], element[:sort_key], element[:original_index]] }
         end
 
         # Check if element violates alphabetical ordering.

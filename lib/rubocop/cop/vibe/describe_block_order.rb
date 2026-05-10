@@ -105,7 +105,7 @@ module RuboCop
         # @param [Array<Hash>] blocks The list of describe blocks.
         # @return [void]
         def autocorrect(corrector, blocks)
-          sorted_blocks = blocks.sort_by { |b| [b[:priority], b[:original_index]] }
+          sorted_blocks = blocks.sort_by { |block| [block[:priority], block[:original_index]] }
 
           blocks.each_with_index do |block, index|
             sorted_block = sorted_blocks[index]
