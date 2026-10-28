@@ -5,6 +5,7 @@
 - Add Vibe/ModuleOrganization cop.
 - Add Vibe/NoSingleCharacterVariableNames cop.
 - Fix ConsecutiveAssignmentAlignment flagging assignments with blocks.
+- Fix BlankLineAfterAssignment flagging safe navigation on the assigned variable.
 
 ## 0.6.0 — March 28th, 2026
 

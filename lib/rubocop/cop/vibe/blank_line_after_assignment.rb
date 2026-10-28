@@ -204,11 +204,11 @@ module RuboCop
         # @return [RuboCop::AST::Node, nil]
         def leftmost_receiver(node)
           return node if node.lvar_type?
-          return unless node.send_type?
+          return unless node.call_type?
 
           current = node
 
-          current = current.receiver while current.send_type? && current.receiver
+          current = current.receiver while current.call_type? && current.receiver
 
           current
         end

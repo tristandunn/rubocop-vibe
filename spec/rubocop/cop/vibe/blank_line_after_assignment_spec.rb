@@ -109,6 +109,15 @@ RSpec.describe RuboCop::Cop::Vibe::BlankLineAfterAssignment, :config do
         RUBY
       end
 
+      it "does not register an offense for safe navigation" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            latest_transaction = latest_transactions.first
+            latest_transaction&.account_id
+          end
+        RUBY
+      end
+
       it "does not register an offense for method chains" do
         expect_no_offenses(<<~RUBY)
           def process
