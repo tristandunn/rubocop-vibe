@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 — November 6th, 2026
 
 - Add Vibe/ModuleOrganization cop.
 - Add Vibe/NoSingleCharacterVariableNames cop.
