@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix BlankLineAfterAssignment flagging statements that start with the assigned variable.
+
 ## 0.7.0 — November 6th, 2026
 
 - Add Vibe/ModuleOrganization cop.

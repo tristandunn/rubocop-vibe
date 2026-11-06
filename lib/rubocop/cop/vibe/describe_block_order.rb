@@ -87,7 +87,6 @@ module RuboCop
           return if describe_blocks.size < 2
 
           violations = find_ordering_violations(describe_blocks)
-
           violations.each do |block_info|
             add_offense(block_info[:node]) do |corrector|
               autocorrect(corrector, describe_blocks)
@@ -122,7 +121,6 @@ module RuboCop
         # @return [Array<RuboCop::AST::Node>]
         def block_nodes(top_node)
           children = top_node.body.begin_type? ? top_node.body.children : [top_node.body]
-
           children.select { |child| child.block_type? && child.method?(:describe) }
         end
 

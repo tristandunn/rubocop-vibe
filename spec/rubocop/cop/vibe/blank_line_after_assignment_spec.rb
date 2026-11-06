@@ -118,6 +118,88 @@ RSpec.describe RuboCop::Cop::Vibe::BlankLineAfterAssignment, :config do
         RUBY
       end
 
+      it "does not register an offense when the next line calls a block on the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.map { |row| row.cells }
+            rows.reject { |row| row.empty? }
+          end
+        RUBY
+      end
+
+      it "does not register an offense when the next line is a logical operator starting with the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            cells = table.cells
+            cells.none? { |cell| cell.empty? } && short?(cells)
+          end
+        RUBY
+      end
+
+      it "does not register an offense for a ternary starting with the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            rows.empty? ? nil : rows.first
+          end
+        RUBY
+      end
+
+      it "does not register an offense for a binary operator starting with the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            rows + other_rows
+          end
+        RUBY
+      end
+
+      it "does not register an offense for an index access on the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            rows[0]
+          end
+        RUBY
+      end
+
+      it "does not register an offense for a modifier conditional starting with the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            rows.clear if reset?
+          end
+        RUBY
+      end
+
+      it "does not register an offense for a negation of the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            !rows.empty?
+          end
+        RUBY
+      end
+
+      it "does not register an offense for a unary minus on the variable" do
+        expect_no_offenses(<<~RUBY)
+          def process
+            rows = table.rows
+            -rows.first
+          end
+        RUBY
+      end
+
+      it "registers an offense when the variable is only used later in the statement" do
+        expect_offense(<<~RUBY)
+          def process
+            rows = table.rows
+            wrap(rows)
+            ^^^^^^^^^^ Add a blank line after variable assignment.
+          end
+        RUBY
+      end
+
       it "does not register an offense for method chains" do
         expect_no_offenses(<<~RUBY)
           def process

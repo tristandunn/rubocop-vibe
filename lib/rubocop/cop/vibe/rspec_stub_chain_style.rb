@@ -179,9 +179,7 @@ module RuboCop
         # @return [Integer]
         def find_chain_start_column(node)
           current = node
-
           current = current.receiver while current.receiver&.send_type?
-
           current.loc.column
         end
 
@@ -251,7 +249,6 @@ module RuboCop
         # @return [Boolean]
         def should_flag?(previous_node, method_node, is_first)
           reference_line = is_first ? previous_node.loc.last_line : previous_node.loc.selector.line
-
           reference_line == method_node.loc.selector.line
         end
       end

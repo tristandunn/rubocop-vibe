@@ -61,7 +61,6 @@ module RuboCop
         # @return [Boolean]
         def alphabetically_ordered?(group)
           names = group.map { |validates| extract_validates_name(validates) }
-
           names == names.sort
         end
 
@@ -90,7 +89,6 @@ module RuboCop
           return if alphabetically_ordered?(group)
 
           violations = find_ordering_violations(group)
-
           violations.each do |validates|
             add_offense(validates) do |corrector|
               autocorrect(corrector, group)
@@ -108,7 +106,6 @@ module RuboCop
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |statement| validates_declaration?(statement) }
-
           groups.each { |group| check_group_order(group) }
         end
 

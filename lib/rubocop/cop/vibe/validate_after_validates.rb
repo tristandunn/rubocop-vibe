@@ -105,7 +105,6 @@ module RuboCop
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |statement| validates_family?(statement) }
-
           groups.each { |group| check_group_order(group) }
         end
 

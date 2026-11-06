@@ -101,7 +101,6 @@ module RuboCop
         def find_example_block(node)
           node.each_ancestor(:block).find do |ancestor|
             send_node = ancestor.send_node
-
             send_node.method?(:it) || send_node.method?(:specify)
           end
         end

@@ -73,6 +73,7 @@ Vibe/BlankLineAfterAssignment:
   Enabled: true
   SafeAutoCorrect: true
   VersionAdded: "0.3.0"
+  VersionChanged: "0.7.1"
 
 Vibe/BlankLineBeforeExpectation:
   Description: "Enforces a blank line before expectation calls when there is setup code above."

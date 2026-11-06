@@ -29,6 +29,22 @@ module RuboCop
       #   forwarded = request.headers["X-Forwarded-For"]
       #   forwarded.to_s.split(",").first.to_s.strip.presence
       #
+      #   # good - next line starts with the assigned variable, including blocks
+      #   rows = table.map { |row| row.cells }
+      #   rows.reject { |row| row.empty? }
+      #
+      #   # good - next line starts with the assigned variable, including operators
+      #   cells = table.cells
+      #   cells.none? { |cell| cell.empty? } && short?(cells)
+      #
+      #   # good - a leading unary operator is ignored
+      #   rows = table.rows
+      #   !rows.empty?
+      #
+      #   # bad - the assigned variable is not the first thing on the next line
+      #   rows = table.rows
+      #   wrap(rows)
+      #
       #   # good - consecutive FactoryBot calls
       #   website   = create(:website)
       #   page_view = create(:page_view, website: website)
@@ -133,7 +149,7 @@ module RuboCop
 
           return if assignment?(inner_following)
           return if blank_line_between?(current, following)
-          return if following_uses_assigned_variable?(current, inner_following)
+          return if following_uses_assigned_variable?(current, following)
           return if consecutive_factory_bot_calls?(current, following)
 
           add_offense(following) do |corrector|
@@ -170,7 +186,7 @@ module RuboCop
           node.send_type? && FACTORY_BOT_METHODS.include?(node.method_name)
         end
 
-        # Check if the following statement starts with the assigned variable.
+        # Check if the following statement begins with the assigned variable.
         #
         # @param [RuboCop::AST::Node] assignment The assignment node.
         # @param [RuboCop::AST::Node] following The following statement.
@@ -178,13 +194,11 @@ module RuboCop
         def following_uses_assigned_variable?(assignment, following)
           var_name = assigned_variable_name(assignment)
 
-          return false unless var_name
-
-          receiver = leftmost_receiver(following)
-
-          return false unless receiver
-
-          receiver.lvar_type? && receiver.children.first == var_name
+          if var_name
+            starts_with_variable?(following, var_name)
+          else
+            false
+          end
         end
 
         # Get the inner statement from a modifier node.
@@ -198,19 +212,19 @@ module RuboCop
           node
         end
 
-        # Get the leftmost receiver in a method chain.
+        # Check if a statement begins with the given variable, ignoring unary operators.
         #
-        # @param [RuboCop::AST::Node] node The node to check.
-        # @return [RuboCop::AST::Node, nil]
-        def leftmost_receiver(node)
-          return node if node.lvar_type?
-          return unless node.call_type?
+        # @param [RuboCop::AST::Node] node The statement to check.
+        # @param [Symbol] name The variable name.
+        # @return [Boolean]
+        def starts_with_variable?(node, name)
+          statement = node
+          statement = statement.receiver while statement.send_type? && statement.unary_operation?
+          start     = statement.source_range.begin_pos
 
-          current = node
-
-          current = current.receiver while current.call_type? && current.receiver
-
-          current
+          statement.each_node(:lvar).any? do |variable|
+            variable.children.first == name && variable.source_range.begin_pos == start
+          end
         end
       end
     end

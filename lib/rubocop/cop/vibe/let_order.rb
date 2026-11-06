@@ -59,7 +59,6 @@ module RuboCop
         # @return [Boolean]
         def alphabetically_ordered?(group)
           names = group.map { |let| extract_let_name(let) }
-
           names == names.sort
         end
 
@@ -88,7 +87,6 @@ module RuboCop
           return if alphabetically_ordered?(group)
 
           violations = find_ordering_violations(group)
-
           violations.each do |let|
             add_offense(let.send_node) do |corrector|
               autocorrect(corrector, group)
@@ -106,7 +104,6 @@ module RuboCop
           return if statements.size < 2
 
           groups = group_consecutive_statements(statements) { |statement| let_declaration?(statement) }
-
           groups.each { |group| check_group_order(group) }
         end
 

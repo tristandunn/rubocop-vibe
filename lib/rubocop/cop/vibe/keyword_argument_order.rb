@@ -117,7 +117,6 @@ module RuboCop
 
           comments.select do |comment|
             match = comment.text.match(/@param\s+(\w+)/)
-
             match && kwarg_names.include?(match[1])
           end
         end

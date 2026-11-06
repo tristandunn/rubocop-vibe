@@ -106,7 +106,6 @@ module RuboCop
         # @return [Boolean]
         def hook_block?(node)
           send_node = node.send_node
-
           send_node.receiver.nil? && HOOK_METHODS.include?(send_node.method_name)
         end
       end

@@ -140,7 +140,6 @@ module RuboCop
         # @return [Boolean]
         def multiple_pairs_on_same_line?(pairs)
           lines = pairs.map { |pair| pair.loc.line }
-
           lines.size != lines.uniq.size
         end
 
@@ -162,7 +161,6 @@ module RuboCop
         # @return [Boolean]
         def pairs_alphabetically_ordered?(pairs)
           key_names = pairs.map { |pair| extract_key_name(pair) }
-
           key_names == key_names.sort
         end
       end

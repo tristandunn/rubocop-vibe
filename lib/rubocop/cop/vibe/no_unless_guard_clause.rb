@@ -245,7 +245,6 @@ module RuboCop
           siblings        = node.parent.children
           node_index      = siblings.index(node)
           first_statement = siblings[node_index + 1]
-
           first_statement.type?(:if, :case)
         end
       end

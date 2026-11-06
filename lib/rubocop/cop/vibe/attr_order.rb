@@ -56,7 +56,6 @@ module RuboCop
         # @return [Boolean]
         def alphabetically_ordered?(arguments)
           names = arguments.map { |arg| arg.value.to_s }
-
           names == names.sort
         end
 
