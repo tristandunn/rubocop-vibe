@@ -184,6 +184,11 @@ Vibe/NoCompoundConditions:
   Enabled: true
   VersionAdded: "0.3.0"
 
+Vibe/NoRescueInSpecs:
+  Description: "Enforces that rescue is not used in spec files."
+  Enabled: true
+  VersionAdded: "0.8.0"
+
 Vibe/NoRubocopDisable:
   Description: "Enforces that rubocop:disable comments are not used inline."
   Enabled: true

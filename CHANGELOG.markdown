@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add Vibe/NoRescueInSpecs cop.
+
 ## 0.7.1 — November 6th, 2026
 
 - Fix BlankLineAfterAssignment flagging statements that start with the assigned variable.
