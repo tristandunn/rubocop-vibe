@@ -184,6 +184,11 @@ Vibe/NoCompoundConditions:
   Enabled: true
   VersionAdded: "0.3.0"
 
+Vibe/NoNestedExpect:
+  Description: "Enforces that expect is not nested inside another expect block."
+  Enabled: true
+  VersionAdded: "0.8.0"
+
 Vibe/NoRescueInSpecs:
   Description: "Enforces that rescue is not used in spec files."
   Enabled: true

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add Vibe/NoNestedExpect cop.
 - Add Vibe/NoRescueInSpecs cop.
 
 ## 0.7.1 — November 6th, 2026
