@@ -1136,6 +1136,36 @@ RSpec.describe RuboCop::Cop::Vibe::ClassOrganization, :config do
           end
         RUBY
       end
+
+      it "does not register an offense for a namespaced base controller parent" do
+        expect_no_offenses(<<~RUBY)
+          module Settings
+            class SessionsController < BaseController
+              def index
+                @sessions = Current.user.sessions
+              end
+
+              def destroy
+                Current.user.sessions.delete_all
+              end
+            end
+          end
+        RUBY
+      end
+
+      it "does not register an offense for an ActionController::Base parent" do
+        expect_no_offenses(<<~RUBY)
+          class UsersController < ActionController::Base
+            def show
+              @user = User.find(params[:id])
+            end
+
+            def index
+              @users = User.all
+            end
+          end
+        RUBY
+      end
     end
   end
 end

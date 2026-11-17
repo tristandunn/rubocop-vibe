@@ -4,6 +4,7 @@
 
 - Add Vibe/NoNestedExpect cop.
 - Add Vibe/NoRescueInSpecs cop.
+- Fix ClassOrganization for custom base controllers.
 
 ## 0.7.1 — November 6th, 2026
 

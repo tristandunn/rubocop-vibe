@@ -172,9 +172,7 @@ module RuboCop
 
           return false unless parent_name
 
-          parent_name == "ApplicationController" ||
-            parent_name == "ActionController::Base" ||
-            parent_name.end_with?("::ApplicationController")
+          parent_name == "ActionController::Base" || parent_name.end_with?("Controller")
         end
 
         # Check if this is a Rails model.
