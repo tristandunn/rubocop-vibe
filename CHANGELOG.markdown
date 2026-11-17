@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 — November 16th, 2026
 
 - Add Vibe/NoNestedExpect cop.
 - Add Vibe/NoRescueInSpecs cop.
