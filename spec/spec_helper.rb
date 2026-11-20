@@ -6,10 +6,9 @@ require "simplecov-console"
 if ENV.fetch("CI", ENV.fetch("COVERAGE", false))
   SimpleCov.formatter = SimpleCov::Formatter::Console
   SimpleCov.start do
-    add_filter("spec/")
-
     enable_coverage  :branch
     minimum_coverage line: 100, branch: 100
+    skip("spec/")
   end
 end
 

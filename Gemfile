@@ -4,7 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "irb",   "1.18.0"
+gem "irb",   "1.19.0"
 gem "rake",  "13.4.2"
 gem "rspec", "3.13.2"
 
